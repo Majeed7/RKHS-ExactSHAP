@@ -15,7 +15,7 @@ module unload all
 module load cuda12.3/toolkit/12.3
 
 # Activate the Python environment
-source /var/scratch/mmi454/envs/hsic_env/bin/activate
+source /var/scratch/mmi454/envs/exactSV-PKM/bin/activate
 
 # Print system info
 echo "Python version:"
@@ -29,12 +29,12 @@ parameter=$1  # $1 refers to the first argument passed to the script
 # Check if a parameter is passed
 if [ -z "$parameter" ]; then
     echo "No argument passed. Using default value: 0.1"
-    parameter=0.1  # Default value
+    parameter=1  # Default value
 fi
 
 # Run the Python script
 echo "Running Python script..."
-python ~/HSIC/HSICNet/fs_real.py "$parameter"
+python ~/RKHS-ExactSHAP/hsic_fs.py "$parameter"
 
 
 # Deactivate the environment
