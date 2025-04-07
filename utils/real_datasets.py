@@ -7,9 +7,20 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from imblearn.under_sampling import RandomUnderSampler
 from ucimlrepo import fetch_ucirepo 
-
+from sklearn.impute import SimpleImputer
 
 def load_dataset(name):
+    X, y = load_dataset_basic(name)
+
+    imputer = SimpleImputer(strategy='mean')
+    imputer.fit(X)
+    X_imputed = imputer.transform(X) 
+
+    return X_imputed, y
+
+
+    
+def load_dataset_basic(name):
     """
     Load dataset by name.
 
@@ -73,6 +84,18 @@ def load_dataset(name):
         y = data.iloc[:, -1]
         return X.values, y.values   
     
+    elif name == "bike": #regression
+        data = pd.read_csv('data/bike.csv.gz', sep=',')
+        X = data.iloc[:, :-1]
+        y = data.iloc[:, -1]
+        return X.values, y.values 
+    
+    elif name == "autos": #regression
+        data = pd.read_csv('data/autos.csv.gz', sep=',')
+        X = data.iloc[:, :-1]
+        y = data.iloc[:, -1]
+        return X.values, y.values 
+    
     elif name == "pumadyn32nm": #regression
         data = pd.read_csv('data/pumadyn32nm.csv.gz', sep=',')
         X = data.iloc[:, :-1]
@@ -101,7 +124,8 @@ def load_dataset(name):
         data = pd.read_csv('data/keggundirected.csv.gz', sep=',')
         X = data.iloc[:, :-1]
         y = data.iloc[:, -1]
-        return X.values, y.values
+        X_down, _, y_down, _ = train_test_split(X.values, y.values, train_size=0.25, random_state=42)
+        return X_down, y_down
     
     elif name == "parkinson": #regression
         data = pd.read_csv('data/parkinson.csv.gz', sep=',')
