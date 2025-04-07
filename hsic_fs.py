@@ -35,9 +35,12 @@ from ucimlrepo import fetch_ucirepo
 from utils.real_datasets import load_dataset
 from explainer.HSICExplainer import HSICExplainer
 import dill
+import sys
 
 import warnings
 warnings.filterwarnings("ignore")
+
+
 
 def train_svm(X_train, y_train, X_test, y_test):
     """
@@ -98,12 +101,10 @@ def train_svm(X_train, y_train, X_test, y_test):
 os.makedirs("trained_models", exist_ok=True)
 
 # Define the list of feature selectors
-feature_selectors = ["HSIC-SV"] # [", "Sobol",HSICLasso", "mutual_info", "lasso", "k_best", "tree_ensemble"] #["AGP-SHAP", "Sobol",] #, "rfecv"]
+feature_selectors = ["HSIC-SV", "Sobol", "HSICLasso", "mutual_info", "lasso", "k_best", "tree_ensemble"] #["AGP-SHAP", "Sobol",] #, "rfecv"]
 
 # Initialize an Excel workbook to store global importance values
 wb = Workbook()
-
-
 
 
 if __name__ == '__main__':
@@ -114,10 +115,41 @@ if __name__ == '__main__':
     # nomao: 34465 * 118 binary
     #did not work on these datasets: #"steel", "ionosphere", "gas", "pol", "sml"]
     
-    dataset_names = ["breast_cancer", "sonar", "waveform"] #"nomao" did not work for HSIC
-    dataset_names2 = ["breast_cancer_wisconsin", "skillcraft"]
-    dataset_names3 = ['parkinson', 'keggdirected', "pumadyn32nm", "crime"]    # Main running part of the script
-    for dataset_name in dataset_names2:
+    dataset_names1 = ["breast_cancer", "sonar", "nomao", "steel"] #  
+    dataset_names2 = ["breast_cancer_wisconsin", "skillcraft", "ionosphere", "sml", "pol"]
+    dataset_names3 = ['parkinson', 'keggdirected', "pumadyn32nm", "crime", "gas"]
+    dataset_names4 = ['autos', 'bike', 'keggundirected']
+
+    if len(sys.argv) < 2:
+        print("No argument passed. Using default value: 1")
+        ds_index = 1
+        dataset_names = dataset_names1
+    else:
+        # Retrieve the parameter passed from Bash
+        parameter = sys.argv[1]
+
+        # Try converting the argument to a number
+        try:
+            # Try converting to an integer
+            ds_index = int(parameter)
+
+            if ds_index == 1:
+                dataset_names = dataset_names1
+            elif ds_index == 2:
+                dataset_names = dataset_names2
+            elif ds_index == 3:
+                dataset_names = dataset_names3
+            elif ds_index == 4:
+                dataset_names = dataset_names4
+
+        except ValueError:
+            # If it fails, try converting to a float
+            ds_index = 1
+            dataset_names = dataset_names1
+            print("Cannot process the value. Using default value: 0.1")
+
+
+    for dataset_name in dataset_names:
         print(f"\nProcessing dataset: {dataset_name}")
         try:
             X, y = load_dataset(dataset_name)
@@ -137,23 +169,10 @@ if __name__ == '__main__':
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
         n, d = X_train.shape
         
-        '''
-        Train Support Vector Machine with RBF kernel
-        '''
-        # Train SVM on the full dataset and store the best model
-        print("Training SVM on the full dataset...")
-        best_model, best_params, full_score = train_svm(X_train, y_train, X_test, y_test)
-
-        # Save the trained model to a file
-        model_filename = f"trained_models/svm_{dataset_name}.pkl"
-        with open(model_filename, "wb") as f:
-            pickle.dump(best_model, f)
-        print(f"Saved best SVM model for {dataset_name} to {model_filename}")
-
-        # Prepare an Excel sheet for the current dataset
         sheet = wb.create_sheet(title=dataset_name)
         sheet.append(["Feature Selector", "Execution Time"] + [f"Feature {i}" for i in range(X.shape[1])])
 
+        
         # Apply each feature selector
         for selector in feature_selectors:
             print(f"Applying feature selector: {selector} on dataset: {dataset_name}")
@@ -162,7 +181,8 @@ if __name__ == '__main__':
             if selector == "HSIC-SV":
                 hsicx = HSICExplainer(X_train, y_train)
                 hsic_sv = hsicx.explain()
-
+                global_importance = hsic_sv
+            
             elif selector == "HSICLasso":
                 hsic_lasso = HSICLasso()
                 hsic_lasso.input(X_train,y_train.squeeze())
@@ -207,7 +227,7 @@ if __name__ == '__main__':
             sheet.append([selector, execution_time] + list(global_importance))
 
         # Save the Excel file after processing each dataset
-        excel_filename = "feature_importance_1.4.xlsx"
+        excel_filename = f"feature_importance_{ds_index}.xlsx"
         wb.save(excel_filename)
         print(f"Global feature importance for {dataset_name} saved to {excel_filename}")
     wb.close()
