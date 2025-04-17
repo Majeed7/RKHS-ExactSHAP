@@ -25,7 +25,7 @@ nvcc --version
 
 # Run the Python script
 echo "Running Python script..."
-python ~/RKHS-ExactSHAP/local_fd.py 
+python ~/RKHS-ExactSHAP/localexp_fd.py 
 
 
 # Deactivate the environment
