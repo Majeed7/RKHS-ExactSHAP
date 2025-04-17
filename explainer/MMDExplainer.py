@@ -2,7 +2,7 @@ import numpy as np
 import math
 from sklearn.metrics.pairwise import rbf_kernel
 from scipy.spatial.distance import pdist, cdist
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, parallel_config
 
 class MMDExplainer:
     def __init__(self, X, Z, **kwargs):
@@ -50,9 +50,10 @@ class MMDExplainer:
         return gamma
 
     def _compute_kernels(self, X, gamma):
-        Ks = Parallel(n_jobs=-1)(
-            delayed(self._compute_feature_kernel)(X[:, j].reshape(-1, 1), gamma) for j in range(self.d)
-        )
+        with parallel_config(backend='loky', inner_max_num_threads=1):
+            Ks = Parallel(n_jobs=-1)(
+                delayed(self._compute_feature_kernel)(X[:, j].reshape(-1, 1), gamma) for j in range(self.d)
+            )
         return Ks
 
     def _compute_feature_kernel(self, Xj, gamma):
@@ -98,12 +99,12 @@ class MMDExplainer:
 
         np.fill_diagonal(onevec_Z, 0)   
         np.fill_diagonal(onevec_X, 0)
-
-        for j in range(self.d):
+        
+        def shapley_value_j(j):
             K_j_X = self.KXs[j]
             K_j_Z = self.KZs[j]
             K_j_XZ = self.KXZs[j]
-
+            
             KX_minus_j = [self.KXs[i] for i in range(self.d) if i != j]
             KZ_minus_j = [self.KZs[i] for i in range(self.d) if i != j]
             KXZ_minus_j = [self.KXZs[i] for i in range(self.d) if i != j]
@@ -125,8 +126,13 @@ class MMDExplainer:
             Z_contribution = ( (self.m * (self.m-1) )**-1) * np.sum(result_Z)
             XZ_contribution =( (self.n * self.m )**-1) * np.sum(result_XZ)
 
-            shapley_value = X_contribution + Z_contribution - 2 * XZ_contribution  
-            shapley_values[j] = shapley_value.item()
+            shapley_value_j = X_contribution + Z_contribution - 2 * XZ_contribution  
+            
+            return shapley_value_j.item()
+
+        shapley_values = Parallel(n_jobs=-1)(
+            delayed(shapley_value_j)(j) for j in range(self.d)
+        )
         
         return shapley_values
 

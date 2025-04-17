@@ -28,7 +28,7 @@ def objective_classification(trial, X, y):
     gamma = trial.suggest_loguniform('gamma', 1e-3, 1e2)
     
     # Use cross-validation only for hyperparameter tuning
-    model = SVC(kernel='rbf', C=C, gamma=gamma, fit_intercept=False)
+    model = SVC(kernel='rbf', C=C, gamma=gamma)
     score = cross_val_score(model, X, y, cv=5, scoring='accuracy')
     return np.mean(score)
 
