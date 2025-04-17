@@ -117,7 +117,7 @@ for i in range(d, len(axes_case1)):  # Hide unused subplots
     axes_case1[i].axis('off')
 fig_case1.suptitle("Histograms of Shapley Values")
 plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.savefig(f"results/hypothesis_testing_histograms_case1_{mode}.png")
+plt.savefig(f"results/hypothesis_testing_histograms_case1_{mode}.png", dpi=500, format='png', bbox_inches='tight')
 plt.close()
 
 # Plot histograms for Case 2 in a figure with multiple rows and at most 5 plots per row
@@ -135,7 +135,7 @@ for i in range(d_prime, len(axes_case2)):  # Hide unused subplots
     axes_case2[i].axis('off')
 fig_case2.suptitle("Histograms of Shapley Values")
 plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.savefig(f"results/hypothesis_testing_histograms_case2_{mode}.png")
+plt.savefig(f"results/hypothesis_testing_histograms_case2_{mode}.png", dpi=500, format='png', bbox_inches='tight')
 plt.show()
 plt.close()
 
