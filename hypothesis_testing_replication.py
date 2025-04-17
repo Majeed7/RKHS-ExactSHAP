@@ -27,7 +27,7 @@ else:
 # Set parameters
 d = 20  # Total number of variables
 d_prime = 10  # Number of variables for the first distribution
-n_samples = 5000  # Number of instances
+n_samples = 1000  # Number of instances
 n_trials = 1000  # Number of trials
 
 # Initialize storage for Shapley values
