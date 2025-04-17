@@ -2,62 +2,71 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 
-
-
 data_names=['Sine Log', 'Sine Cosine', 'Poly Sine', 'Squared Exponentials', 'Tanh Sine', 
             'Trigonometric Exponential', 'Exponential Hyperbolic']
 
-#def generate_X(n_samples=100, n_features=10):
-#    import numpy as np
-
-def generate_X(num_samples, num_features, influential_indices, correlation_value=0.6, type="correlated"):
-
-    if type != "correlated":
-    # Generate samples with a standard normal distribution
-        return np.random.randn(num_samples, num_features)
+def generate_X(num_samples, num_features):
     """
-    Generate synthetic data where specified influential features are correlated with unique non-influential features.
+    Generate samples with a standard normal distribution.
 
     Parameters:
     - num_samples: int, number of samples.
     - num_features: int, total number of features.
-    - influential_indices: list of int, indices of influential features.
-    - correlation_value: float, correlation value between paired features.
 
     Returns:
     - data: np.ndarray, generated synthetic data.
     """
-    num_influential = len(influential_indices)
-    non_influential_indices = list(set(range(num_features)) - set(influential_indices))
+    return np.random.randn(num_samples, num_features)
 
-    assert num_influential <= len(non_influential_indices), (
-        "Number of non-influential features must be >= number of influential features."
-    )
-    
-    # Initialize covariance matrix (identity matrix)
-    cov_matrix = np.eye(num_features)
-    
-    # Assign correlations between each influential feature and a unique non-influential feature
-    for i, inf_idx in enumerate(influential_indices):
-        non_inf_idx = non_influential_indices[i]
-        cov_matrix[inf_idx, non_inf_idx] = correlation_value
-        cov_matrix[non_inf_idx, inf_idx] = correlation_value  # Symmetry
-    
-    # Check positive definiteness of the covariance matrix
-    if not np.all(np.linalg.eigvals(cov_matrix) > 0):
-        raise ValueError("Covariance matrix is not positive definite. Adjust correlations or feature setup.")
-    
-    # Generate mean vector
-    mean = np.zeros(num_features)
-    
-    # Generate data with correlation
-    data = np.random.multivariate_normal(mean, cov_matrix, size=num_samples)
-    
-    return data
+def generate_dataset_polynomial(n_samples=100, n_features=10, degree=2):
+    """
+    Generate a dataset where the target is based on a polynomial of a specified degree
+    using the first 1/3 of the features, and the rest are redundant.
 
-def generate_dataset_sinlog(n_samples=100, n_features=10, type="correlated"):
+    Args:
+        n_samples (int): Number of samples.
+        n_features (int): Total number of features.
+        degree (int): Degree of the polynomial.
+
+    Returns:
+        X (np.ndarray): Generated feature matrix.
+        y (np.ndarray): Target values.
+        fn (callable): Function used to generate the target.
+        influential_indices (list): Indices of influential features.
+        str: Dataset name.
+    """
+    influential_indices = np.arange(0, n_features // 3)
+    X = generate_X(n_samples, n_features)
+
+    def fn(X):
+        # Use only the first 1/3 of features for the polynomial
+        relevant_features = X[:, :n_features // 3]
+        # Compute the polynomial target
+        y = np.sum([np.sum(relevant_features**i, axis=1) for i in range(1, degree + 1)], axis=0)
+        return y
+
+    y = fn(X)
+
+    return X, y, fn, influential_indices, f'Polynomial Degree {degree}'
+    
+def generate_dataset_squared_exponentials(n_samples=100, n_features=10):
+    influential_indices = np.arange(0, n_features // 3)
+    X = generate_X(n_samples, n_features)
+
+    def fn(X):
+        # Compute a function based on squared exponentials of the influential features
+        y = np.exp(np.sum(X[:, influential_indices]**2, axis=1) - 4.0)
+        
+        return y
+
+    y = fn(X)
+    
+    return X, y, fn, influential_indices, 'Squared Exponentials'
+
+
+def generate_dataset_sinlog(n_samples=100, n_features=10):
     influential_indices = np.arange(0, 2) 
-    X = generate_X(n_samples, n_features, influential_indices = influential_indices, correlation_value=0.6, type=type)
+    X = generate_X(n_samples, n_features)
 
     def fn(X):
         f1, f2 = X[:, 0], X[:, 1]
@@ -77,13 +86,13 @@ def generate_dataset_sinlog(n_samples=100, n_features=10, type="correlated"):
     
     return X, y, fn, influential_indices, 'Sine Log'
 
-def generate_dataset_sin(n_samples=100, n_features=10, noise=0.1, type="correlated"):
+def generate_dataset_sin(n_samples=100, n_features=10, noise=0.1):
     """
     Args:
         noise (float): Standard deviation of Gaussian noise to add to the output. 
     """
     influential_indices = np.arange(0, 2)
-    X = generate_X(n_samples, n_features, influential_indices=influential_indices, correlation_value=0.6, type=type)
+    X = generate_X(n_samples, n_features)
 
     def fn(X):
         f1, f2 = X[:, 0], X[:, 1]
@@ -107,9 +116,9 @@ def generate_dataset_sin(n_samples=100, n_features=10, noise=0.1, type="correlat
     
     return X, y, fn, influential_indices, 'Sine Cosine'
 
-def generate_dataset_poly_sine(n_samples=100, n_features=10, type="correlated"):
+def generate_dataset_poly_sine(n_samples=100, n_features=10):
     influential_indices = np.arange(0, 2)
-    X = generate_X(n_samples, n_features, influential_indices=influential_indices, correlation_value=0.6, type=type)
+    X = generate_X(n_samples, n_features)
 
     def fn(X):
         f1, f2 = X[:, 0], X[:, 1]
@@ -123,25 +132,12 @@ def generate_dataset_poly_sine(n_samples=100, n_features=10, type="correlated"):
     
     return X, y, fn, influential_indices, 'Poly Sine'
 
-def generate_dataset_squared_exponentials(n_samples=100, n_features=10, type="correlated"):
-    influential_indices = np.arange(0, 3)
-    X = generate_X(n_samples, n_features, influential_indices=influential_indices, correlation_value=0.6, type=type)
-
-    def fn(X):
-        # Compute a function based on squared exponentials of the first 2 features
-        y = np.exp(np.sum(X[:, :3]**2, axis=1) - 4.0)
-        
-        return y
-
-    y = fn(X)
-    
-    return X, y, fn, influential_indices, 'Squared Exponentials'
 
 # These functions are for more than 3 features
 
-def generate_dataset_complex_tanhsin(n_samples=1000, n_features=10, type="correlated"):
+def generate_dataset_complex_tanhsin(n_samples=1000, n_features=10):
     influential_indices = np.arange(0, 3)
-    X = generate_X(n_samples, n_features, influential_indices=influential_indices, correlation_value=0.6, type=type)
+    X = generate_X(n_samples, n_features)
 
     def fn(X):
         f1, f2, f3 = X[:, 0], X[:, 1], X[:, 2]
@@ -162,9 +158,9 @@ def generate_dataset_complex_tanhsin(n_samples=1000, n_features=10, type="correl
     
     return X, y, fn, influential_indices, 'Tanh Sine'
 
-def generate_dataset_complex_trig_exp(n_samples=100, n_features=10, type="correlated"):
+def generate_dataset_complex_trig_exp(n_samples=100, n_features=10):
     influential_indices = np.arange(0, 4)
-    X = generate_X(n_samples, n_features, influential_indices=influential_indices, correlation_value=0.6, type=type)
+    X = generate_X(n_samples, n_features)
 
     def fn(X):
         f1, f2, f3, f4 = X[:, 0], X[:, 1], X[:, 2], X[:, 3]
@@ -179,9 +175,9 @@ def generate_dataset_complex_trig_exp(n_samples=100, n_features=10, type="correl
 
     return X, y, fn, influential_indices, 'Trigonometric Exponential'
 
-def generate_dataset_complex_exponential_hyperbolic(n_samples=100, n_features=10, type="correlated"):
+def generate_dataset_complex_exponential_hyperbolic(n_samples=100, n_features=10):
     influential_indices = np.arange(0, 4)
-    X = generate_X(n_samples, n_features, influential_indices=influential_indices, correlation_value=0.6, type=type)
+    X = generate_X(n_samples, n_features)
 
     def fn(X):
         f1, f2, f3, f4 = X[:, 0], X[:, 1], X[:, 2], X[:, 3]
@@ -196,23 +192,22 @@ def generate_dataset_complex_exponential_hyperbolic(n_samples=100, n_features=10
     
     return X, y, fn, influential_indices, 'Exponential Hyperbolic'
 
-
-def generate_dataset(data_name, n_samples=100, n_features=10, seed = 0, type="correlated"):
+def generate_dataset(data_name, n_samples=100, n_features=10, seed = 0):
     np.random.seed(seed)
     if data_name == data_names[0]:
-         X, y, fn, feature_imp, _ = generate_dataset_sinlog(n_samples, n_features, type)
+         X, y, fn, feature_imp, _ = generate_dataset_sinlog(n_samples, n_features)
     if data_name == data_names[1]:
-         X, y, fn, feature_imp, _ = generate_dataset_sin(n_samples, n_features, type)
+         X, y, fn, feature_imp, _ = generate_dataset_sin(n_samples, n_features)
     if data_name == data_names[2]:
-         X, y, fn, feature_imp, _ = generate_dataset_poly_sine(n_samples, n_features, type)
+         X, y, fn, feature_imp, _ = generate_dataset_poly_sine(n_samples, n_features)
     if data_name == data_names[3]:
-         X, y, fn, feature_imp, _ = generate_dataset_squared_exponentials(n_samples, n_features, type)
+         X, y, fn, feature_imp, _ = generate_dataset_squared_exponentials(n_samples, n_features)
     if data_name == data_names[4]:
-        X, y, fn, feature_imp, _ = generate_dataset_complex_tanhsin(n_samples, n_features, type)
+        X, y, fn, feature_imp, _ = generate_dataset_complex_tanhsin(n_samples, n_features)
     if data_name == data_names[5]:
-        X, y, fn, feature_imp, _ = generate_dataset_complex_trig_exp(n_samples, n_features, type)
+        X, y, fn, feature_imp, _ = generate_dataset_complex_trig_exp(n_samples, n_features)
     if data_name == data_names[6]:
-        X, y, fn, feature_imp, _ = generate_dataset_complex_exponential_hyperbolic(n_samples, n_features, type)
+        X, y, fn, feature_imp, _ = generate_dataset_complex_exponential_hyperbolic(n_samples, n_features)
     
     Ground_Truth = Ground_Truth_Generation(X, data_name)
     return X, y, fn, feature_imp, Ground_Truth
@@ -247,20 +242,20 @@ def Ground_Truth_Generation(X, data_name):
     return out
 
 def create_rank(scores): 
-	"""
-	Compute rank of each feature based on weight.
-	
-	"""
-	scores = abs(scores)
-	n, d = scores.shape
-	ranks = []
-	for i, score in enumerate(scores):
-		# Random permutation to avoid bias due to equal weights.
-		idx = np.random.permutation(d) 
-		permutated_weights = score[idx]  
-		permutated_rank=(-permutated_weights).argsort().argsort()+1
-		rank = permutated_rank[np.argsort(idx)]
+    """
+    Compute rank of each feature based on weight.
+    
+    """
+    scores = abs(scores)
+    n, d = scores.shape
+    ranks = []
+    for i, score in enumerate(scores):
+        # Random permutation to avoid bias due to equal weights.
+        idx = np.random.permutation(d) 
+        permutated_weights = score[idx]  
+        permutated_rank=(-permutated_weights).argsort().argsort()+1
+        rank = permutated_rank[np.argsort(idx)]
 
-		ranks.append(rank)
+        ranks.append(rank)
 
-	return np.array(ranks)
+    return np.array(ranks)
