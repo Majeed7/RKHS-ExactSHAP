@@ -51,7 +51,7 @@ class MMDExplainer:
 
     def _compute_kernels(self, X, gamma):
         #with parallel_config(backend='loky', inner_max_num_threads=1):
-        Ks = Parallel(n_jobs=-1, use_threads=True)(
+        Ks = Parallel(n_jobs=-1)(
             delayed(self._compute_feature_kernel)(X[:, j].reshape(-1, 1), gamma) for j in range(self.d)
         )
         return Ks
