@@ -138,8 +138,6 @@ class MMDExplainer:
 
 # Example Usage
 if __name__ == "__main__":
-    from sklearn.datasets import make_regression
-    from sklearn.preprocessing import StandardScaler
 
     np.random.seed(42)
     X = np.random.multivariate_normal(mean=[2, 3, 7, 1, 0], cov=np.eye(5), size=1000)

@@ -96,10 +96,9 @@ for d in ds:
         shapley_regression_times_instance = []
 
         for i, x in enumerate(X_tbx):
-            k_vectors = np.array(explainer.compute_kernel_vectors(X[model.support_, :], x))
-            
             start_time = time.time()
             
+            k_vectors = np.array(explainer.compute_kernel_vectors(X[model.support_, :], x))
             samples_weights = kernel_shap_sampling(d, sample_size)
             samples = np.array([t[0] for t in samples_weights])
             weights = np.array([t[1] for t in samples_weights])
@@ -111,6 +110,7 @@ for d in ds:
 
             shap_reg = Shapley_regression(np.array(samples, dtype='float'), y_values, weights)
             shap_vals = shap_reg.coef_
+
             shapley_regression_times_instance.append(time.time() - start_time)
 
             shapley_regression_values.append(shap_vals)
