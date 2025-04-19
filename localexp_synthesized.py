@@ -29,7 +29,7 @@ if not os.path.exists(results_xsl):
 # Define the number of samples and features as variables
 mode='deploy'
 n_samples = 1000
-n_features = 50
+n_features = 20
 n_trials = 100
 tbx_no = 100
 
@@ -41,9 +41,9 @@ if mode == 'test':
 
 # Generate synthesized datasets
 datasets = [
-    ("Polynomial Degree 5", generate_dataset_polynomial(n_samples, n_features, degree=5)),
-    ("Polynomial Degree 10", generate_dataset_polynomial(n_samples, n_features, degree=10)),
     ("Squared Exponentials", generate_dataset_squared_exponentials(n_samples, n_features)),
+    ("Polynomial Degree 5", generate_dataset_polynomial(n_samples, n_features, degree=5)),
+    ("Polynomial Degree 10", generate_dataset_polynomial(n_samples, n_features, degree=10)),    
 ]
 # Prepare a dictionary to store accuracies for each dataset
 dataset_accuracies = {ds_name: {} for ds_name, _ in datasets}
@@ -53,11 +53,20 @@ dataset_execution_times = {ds_name: {} for ds_name, _ in datasets}
 
 # Iterate over datasets
 for ds_name, (X, y, fn, feature_imp, ds) in datasets:
-    # Train SVM without standardization
+    scaler_X = StandardScaler()
+    scaler_y = StandardScaler()
+    X = scaler_X.fit_transform(X)
+    y = scaler_y.fit_transform(y.reshape(-1, 1)).flatten()
+
     optimized_svm = optimize_svm_rbf(X, y, n_trials=n_trials)
     model = optimized_svm['model']
     fn = model.predict
 
+    # Calculate training error for regression
+    y_pred_train = model.predict(X)
+    training_error = np.mean((y_pred_train - y) ** 2)  # Mean Squared Error
+    print(f"Training Error (MSE) for {ds_name}: {training_error}")
+    
     # Select 100 instances for explanation
     selected_indices = np.random.choice(X.shape[0], size=tbx_no, replace=False)
     X_tbx = X[selected_indices, :]
@@ -81,7 +90,7 @@ for ds_name, (X, y, fn, feature_imp, ds) in datasets:
     for nsamples in [500, 1000]:
         # GEMFIX
         X_bg = shap.sample(X, 100)
-        gemfix = GEMFIX(fn, X, lam=0.001)
+        gemfix = GEMFIX(fn, X_bg, lam=0.001)
         start_time = datetime.now()
         gem_values = gemfix.shap_values(X_tbx, nsamples=nsamples)
         end_time = datetime.now()

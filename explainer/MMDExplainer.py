@@ -20,6 +20,16 @@ class MMDExplainer:
         self.n, self.d = self.X.shape
         self.m = self.Z.shape[0]
         
+        self.estimation_type = kwargs.get("estimation_type", "U")
+        self.coef_xz = self.n * self.m
+        if self.estimation_type == "U":
+            self.coef_x = self.n * (self.n - 1)
+            self.coef_z = self.m * (self.m - 1)
+            
+        elif self.estimation_type == "V":
+            self.coef_x = self.n ** 2
+            self.coef_z = self.m ** 2
+
         self.gamma_x = kwargs.get("gamma_x", None)
         self.gamma_z = kwargs.get("gamma_z", None)
         self.gamma_xz = kwargs.get("gamma_xz", None)
@@ -46,7 +56,7 @@ class MMDExplainer:
             pairwise_distances = cdist(X, Z, metric='euclidean')
 
         sigma = np.median(pairwise_distances)
-        gamma = 1 / (2 * (sigma ** 2)) if sigma != 0 else 1.0
+        gamma = 1.0 / (2.0 * (sigma ** 2)) if sigma != 0 else 1.0
         return gamma
 
     def _compute_kernels(self, X, gamma):
@@ -58,7 +68,6 @@ class MMDExplainer:
 
     def _compute_feature_kernel(self, Xj, gamma):
         K = rbf_kernel(Xj, gamma=gamma)
-        np.fill_diagonal(K, 0)
         return K
 
     def _compute_cross_kernel(self, X, Z, gamma):
@@ -97,8 +106,12 @@ class MMDExplainer:
         onevec_Z = np.ones_like(self.KZs[0])
         onevec_XZ = np.ones_like(self.KXZs[0])
 
-        np.fill_diagonal(onevec_Z, 0)   
-        np.fill_diagonal(onevec_X, 0)
+        if self.estimation_type == "U":
+            np.fill_diagonal(onevec_Z, 0)   
+            np.fill_diagonal(onevec_X, 0)
+            [np.fill_diagonal(t, 0) for t in self.KXs]
+            [np.fill_diagonal(t, 0) for t in self.KZs]
+ 
         
         def shapley_value_j(j):
             K_j_X = self.KXs[j]
@@ -119,14 +132,15 @@ class MMDExplainer:
             result_Z = (K_j_Z - onevec_Z) * psi_Z
             result_XZ = (K_j_XZ - onevec_XZ) * psi_XZ
             
-            assert np.sum(np.diag(result_X)) == 0, "Diagonal elements should be zero."
-            assert np.sum(np.diag(result_Z)) == 0, "Diagonal elements should be zero." 
+            if self.estimation_type == "U":
+                assert np.sum(np.diag(result_X)) == 0, "Diagonal elements should be zero."
+                assert np.sum(np.diag(result_Z)) == 0, "Diagonal elements should be zero." 
 
-            X_contribution = ( (self.n * (self.n-1) )**-1) * np.sum(result_X)
-            Z_contribution = ( (self.m * (self.m-1) )**-1) * np.sum(result_Z)
-            XZ_contribution =( (self.n * self.m )**-1) * np.sum(result_XZ)
+            X_contribution = np.sum(result_X) / self.coef_x
+            Z_contribution = np.sum(result_Z) / self.coef_z 
+            XZ_contribution = np.mean(result_XZ) # np.sum(result_XZ) / self.coef_xz
 
-            shapley_value_j = X_contribution + Z_contribution - 2 * XZ_contribution  
+            shapley_value_j = X_contribution + Z_contribution - (2 * XZ_contribution)
             
             return shapley_value_j.item()
 
@@ -138,7 +152,7 @@ class MMDExplainer:
 
 # Example Usage
 if __name__ == "__main__":
-
+    
     np.random.seed(42)
     X = np.random.multivariate_normal(mean=[2, 3, 7, 1, 0], cov=np.eye(5), size=1000)
     Z = np.random.multivariate_normal(mean=[5, 3, 2, 5, 0], cov=np.eye(5), size=1000)
