@@ -30,6 +30,8 @@ d_prime = 10  # Number of variables for the first distribution
 n_samples = 1000  # Number of instances
 n_trials = 1000  # Number of trials
 
+estimation_type = "V"
+
 # Initialize storage for Shapley values
 shapley_values_case1 = []
 shapley_values_case2 = []
@@ -73,13 +75,13 @@ for trial in range(n_trials):
     Y = np.hstack((Y1, Y2))
 
     # Case 1: Compute Shapley values for X and Y
-    explainer = MMDExplainer(X=X, Z=Y)
+    explainer = MMDExplainer(X=X, Z=Y, estimation_type=estimation_type)
     sv_case1 = explainer.explain()
     sv_case1 = n_samples * np.array(sv_case1)
     shapley_values_case1.append(sv_case1)
 
     # Case 2: Compute Shapley values for X1 and Y1
-    explainer2 = MMDExplainer(X=X1, Z=Y1)
+    explainer2 = MMDExplainer(X=X1, Z=Y1, estimation_type=estimation_type)
     sv_case2 = explainer2.explain()
     sv_case2 = n_samples * np.array(sv_case2)
     shapley_values_case2.append(sv_case2)
@@ -89,7 +91,7 @@ df_case1 = pd.DataFrame(shapley_values_case1, columns=[f"V{i}" for i in range(1,
 df_case2 = pd.DataFrame(shapley_values_case2, columns=[f"V{i}" for i in range(1, d_prime + 1)])
 
 # Save results to an Excel file with two sheets
-output_file = f"results/hypothesis_testing_sv_{mode}.xlsx"
+output_file = f"results/hypothesis_testing_sv_{mode}_Vstat.xlsx"
 with pd.ExcelWriter(output_file) as writer:
     df_case1.to_excel(writer, sheet_name="Case1_X_vs_Y", index=False)
     df_case2.to_excel(writer, sheet_name="Case2_X1_vs_Y1", index=False)
@@ -117,7 +119,7 @@ for i in range(d, len(axes_case1)):  # Hide unused subplots
     axes_case1[i].axis('off')
 fig_case1.suptitle("Histograms of Shapley Values")
 plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.savefig(f"results/hypothesis_testing_histograms_case1_{mode}.png", dpi=500, format='png', bbox_inches='tight')
+plt.savefig(f"results/hypothesis_testing_histograms_case1_{mode}_Vstat.png", dpi=500, format='png', bbox_inches='tight')
 plt.close()
 
 # Plot histograms for Case 2 in a figure with multiple rows and at most 5 plots per row
@@ -135,7 +137,7 @@ for i in range(d_prime, len(axes_case2)):  # Hide unused subplots
     axes_case2[i].axis('off')
 fig_case2.suptitle("Histograms of Shapley Values")
 plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.savefig(f"results/hypothesis_testing_histograms_case2_{mode}.png", dpi=500, format='png', bbox_inches='tight')
+plt.savefig(f"results/hypothesis_testing_histograms_case2_{mode}_Vstat.png", dpi=500, format='png', bbox_inches='tight')
 plt.show()
 plt.close()
 
