@@ -131,7 +131,7 @@ if not plot_only:
 fig, axes = plt.subplots(1, 4, figsize=(15, 5))
 axes = axes.flatten()
 n_instances = 100
-ds = [20,100]
+ds = [10, 20, 50, 100]
 
 for idx, d in enumerate(ds):
     # Load results
