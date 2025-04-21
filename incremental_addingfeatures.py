@@ -30,6 +30,26 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import accuracy_score, mean_absolute_percentage_error
 import numpy as np
 
+
+if len(sys.argv) < 2:
+    print("No argument passed. Using default value: 1")
+    replication = 1
+    
+else:
+    # Retrieve the parameter passed from Bash
+    parameter = sys.argv[1]
+
+    # Try converting the argument to a number
+    try:
+        # Try converting to an integer
+        replication = int(parameter)
+
+    except ValueError:
+        # If it fails, try converting to a float
+        replication = 1
+        print("Cannot process the value. Using default value: 0.1")
+
+
 def train_rf(X, y, n_split=5):
     """
     Trains a Random Forest model using GridSearchCV and returns the performance score.
@@ -321,7 +341,7 @@ def main():
                 # result_sheet.append(std_row)
 
             # Save the results to a new Excel file
-            results_wb.save(f"results/incremental_feature_rf_bigestimators.xlsx")
+            results_wb.save(f"results/incremental_feature_rf_replica{replication}.xlsx")
 
         except Exception as e:
             print(f"{sheet_name} could not be processed! Error: {e}")

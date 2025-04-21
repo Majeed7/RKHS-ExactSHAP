@@ -25,7 +25,10 @@ nvcc --version
 
 # Run the Python script
 echo "Running Python script..."
-python ~/RKHS-ExactSHAP/incremental_addingfeatures.py 
+for param in {1..30}; do
+    echo "Running with parameter: $param"
+    python ~/RKHS-ExactSHAP/incremental_addingfeatures.py --input "$param"
+done
 
 
 # Deactivate the environment
