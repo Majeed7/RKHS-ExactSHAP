@@ -21,7 +21,7 @@ plt.rcParams.update({
     'axes.titleweight': 'bold',  # Ensure the titles are bold
     'figure.titleweight': 'bold',  # Bold for suptitle if you use fig.suptitle()
     'xtick.labelsize': 8,  # Font size for X-tick labels
-    'ytick.labelsize': 12,  # Font size for Y-tick labels
+    'ytick.labelsize': 10,  # Font size for Y-tick labels
     'xtick.major.size': 5,  # Length of major ticks
     'ytick.major.size': 5,  # Length of major ticks
     'xtick.minor.size': 3,  # Length of minor ticks
@@ -40,13 +40,14 @@ def compute_y(k_vectors, samples, alpha):
     return np.array(y)  
 
 # Define the number of features for each dataset
-ds = [100] #[10, 20, 50, 100]
+ds = [10, 20, 50, 100]
 
 # Create results directory if it doesn't exist
 results_dir = "results"
 os.makedirs(results_dir, exist_ok=True)
 
-if True:
+plot_only = False
+if not plot_only:
     for d in ds:
         # Generate dataset
         X, y = make_regression(n_samples=50*d, n_features=d, noise=0.1)
@@ -56,7 +57,7 @@ if True:
         y = scaler_y.fit_transform(y.reshape(-1, 1)).flatten()
 
         # Optimize SVM
-        svm_optimized = optimize_svm_rbf(X, y, n_trials=100)
+        svm_optimized = optimize_svm_rbf(X, y, n_trials=10)
         model = svm_optimized['model']
 
         # Select 100 instances
@@ -77,6 +78,8 @@ if True:
             start_time = time.time()
             explainer = RBFLocalExplainer(model)
             shapley_values = explainer.explain(x)
+            #from dp import instancewise_shapley_value
+            #sv2 = instancewise_shapley_value(x, X, model)
             rbf_times.append(time.time() - start_time)
             rbf_shapley_values.append(shapley_values)
             sheet_rbf.append([i] + shapley_values)
@@ -105,7 +108,7 @@ if True:
                 weights = np.array([t[1] for t in samples_weights])
 
                 samples = np.vstack([samples, np.ones(samples[0].shape)]).astype(int)
-                weights = np.hstack([weights, 1e20])
+                weights = np.hstack([weights, 1e30])
 
                 y_values = compute_y(k_vectors, samples, model.dual_coef_.squeeze())
 
@@ -124,16 +127,15 @@ if True:
         # Save workbook
         workbook.save(excel_file)
 
-
-
 # Plot results
 fig, axes = plt.subplots(1, 4, figsize=(15, 5))
 axes = axes.flatten()
 n_instances = 100
+ds = [20,100]
 
 for idx, d in enumerate(ds):
     # Load results
-    excel_file = os.path.join(results_dir, f"sv_d{d}.xlsx")
+    excel_file = os.path.join(results_dir, f"sv_d{d}_normalized.xlsx")
     workbook = load_workbook(excel_file)
 
     # Extract RBFExplainer results
@@ -177,9 +179,9 @@ for idx, d in enumerate(ds):
     
     axes[idx].set_xscale("log")
     axes[idx].set_title(f"d={d}")
-    axes[idx].set_xlabel("Number of Samples")
-    axes[idx].set_ylabel("Relative Error")
-    axes[idx].legend()
+    #axes[idx].set_xlabel("Number of Samples")
+    axes[0].set_ylabel("Absolute Error")
+    axes[-1].legend()
 
 plt.tight_layout()
 plt.show()

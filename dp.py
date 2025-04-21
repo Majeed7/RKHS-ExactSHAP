@@ -119,65 +119,66 @@ def compute_shapley_values_bruteforce(X_instance, X_train, svm_model, gamma):
     return shapley_values
 
 
-'''
-Classification with SVM
-'''
-# Generate a synthetic dataset with 10 features
-X, y = make_classification(n_samples=200, n_features=10, random_state=42)
+if __name__ == "__main__":
+    '''
+    Classification with SVM
+    '''
+    # Generate a synthetic dataset with 10 features
+    X, y = make_classification(n_samples=200, n_features=10, random_state=42)
 
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Standardize the features
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+    # Standardize the features
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
 
-# Train an SVM model with RBF kernel
-#svm_model = SVC(kernel='rbf', C=1.0, gamma='scale')
-#svm_model.fit(X_train, y_train)
+    # Train an SVM model with RBF kernel
+    #svm_model = SVC(kernel='rbf', C=1.0, gamma='scale')
+    #svm_model.fit(X_train, y_train)
 
-# Set gamma value for RBF kernel
-#gamma = svm_model._gamma
+    # Set gamma value for RBF kernel
+    #gamma = svm_model._gamma
 
-'''
-Regression with SVR
-'''
+    '''
+    Regression with SVR
+    '''
 
-# Generate a synthetic regression dataset with 10 features
-X, y = make_regression(n_samples=200, n_features=10, random_state=42)
+    # Generate a synthetic regression dataset with 10 features
+    X, y = make_regression(n_samples=200, n_features=10, random_state=42)
 
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Standardize the features
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+    # Standardize the features
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
 
-# Train an SVR model with RBF kernel
-svr_model = SVR(kernel='rbf', C=1.0, gamma='scale')
-svr_model.fit(X_train, y_train)
+    # Train an SVR model with RBF kernel
+    svr_model = SVR(kernel='rbf', C=1.0, gamma='scale')
+    svr_model.fit(X_train, y_train)
 
-# Set gamma value for RBF kernel
-gamma = svr_model._gamma
+    # Set gamma value for RBF kernel
+    gamma = svr_model._gamma
 
-# Select a test instance
-test_instance = X_test[0]
+    # Select a test instance
+    test_instance = X_test[0]
 
-# Compute Shapley values for the test instance
-#shapley_values = compute_shapley_values_bruteforce(test_instance, X_train, svr_model, gamma)
+    # Compute Shapley values for the test instance
+    #shapley_values = compute_shapley_values_bruteforce(test_instance, X_train, svr_model, gamma)
 
-# Print the computed Shapley values
-# print("Shapley values for the test instance:")
-# for i, value in enumerate(shapley_values):
-#     print(f"Feature {i+1}: {value:.4f}")
+    # Print the computed Shapley values
+    # print("Shapley values for the test instance:")
+    # for i, value in enumerate(shapley_values):
+    #     print(f"Feature {i+1}: {value:.4f}")
 
-sv = instancewise_shapley_value(test_instance, X_train, svr_model)
+    sv = instancewise_shapley_value(test_instance, X_train, svr_model)
 
-# Compute the kernel matrix for a selected test instance
-kernel_matrix = compute_kernel_matrix(test_instance, X_train, gamma)
-dp = instancewise_sv_dim(kernel_matrix, 0)
+    # Compute the kernel matrix for a selected test instance
+    kernel_matrix = compute_kernel_matrix(test_instance, X_train, gamma)
+    dp = instancewise_sv_dim(kernel_matrix, 0)
 
-kernel_matrix.shape
+    kernel_matrix.shape
 

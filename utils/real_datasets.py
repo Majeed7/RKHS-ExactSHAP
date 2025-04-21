@@ -19,7 +19,6 @@ def load_dataset(name):
     return X_imputed, y
 
 
-    
 def load_dataset_basic(name):
     """
     Load dataset by name.

@@ -66,13 +66,12 @@ variables = [f"V{i}" for i in range(1,d+1)]
 sv_statistics = n_samples * np.array(sv)
 ax = sns.barplot(x=variables, y=sv_statistics)
 
-ax.set_title(f"Shapley Value Statistics for Variables")
 ax.set_xlabel("Variables")
 ax.set_ylabel("Shapley Values")
 
 plt.tight_layout()
 plt.show()
-plt.savefig('results/hypothesis_testing.png', dpi=500, format='png', bbox_inches='tight')
+plt.savefig('results/mmd/hypothesis_testing_onereplica_Ustat.png', dpi=500, format='png', bbox_inches='tight')
 
 ## Equal distribution and Shapley value
 explainer2 = MMDExplainer(X=X1, Z=Z1)
@@ -83,14 +82,13 @@ variables2 = [f"V{i}" for i in range(1,d_prime+1)]
 sv_statistics2 = n_samples * np.array(sv2)
 ax = sns.barplot(x=variables2, y=sv_statistics2)
 
-ax.set_title(f"Shapley Value Statistics for Wine Dataset")
-ax.set_xlabel("Features")
+ax.set_xlabel("Variables")
 ax.set_ylabel("Shapley Values")
 
 
 plt.tight_layout()
 plt.show()
-plt.savefig('results/hypothesis_testing_equaldist.png', dpi=500, format='png', bbox_inches='tight')
+plt.savefig('results/mmd/hypothesis_testing_onereplica_equaldist_Ustat.png', dpi=500, format='png', bbox_inches='tight')
 
 
 '''
@@ -108,8 +106,11 @@ X_male = X[X[:, 1] > 0]  # Assuming 1 represents male
 X_female = X[X[:, 1] < 0]  # Assuming 0 represents female
 
 X_male = np.delete(X_male, 1, axis=1)
+#X_male = np.delete(X_male, 5, axis=1)
 X_female = np.delete(X_female, 1, axis=1)
+#X_female = np.delete(X_female, 5, axis=1)
 sel_fs = np.delete(feature_names, 1)
+#sel_fs = np.delete(sel_fs, 5)
 
 explainer_wine = MMDExplainer(X=X_male, Z=X_female)
 sv_wine = explainer_wine.explain()
@@ -118,14 +119,13 @@ sv_wine_statistics = X_male.shape[0] * np.array(sv_wine)
 plt.figure(figsize=(10, 5)) 
 ax = sns.barplot(x=sel_fs, y=sv_wine_statistics)
 
-ax.set_title(f"Shapley Value Statistics for Variables")
 ax.set_xlabel("Variables")
 ax.set_ylabel("Shapley Values")
 
 
 plt.tight_layout()
 plt.show()
-plt.savefig('results/hypothesis_testing_wine.png', dpi=500, format='png', bbox_inches='tight')
+plt.savefig('results/mmd/hypothesis_testing_wine.png', dpi=500, format='png', bbox_inches='tight')
 
 fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(15, 12))
 
