@@ -40,7 +40,7 @@ def compute_y(k_vectors, samples, alpha):
     return np.array(y)  
 
 # Define the number of features for each dataset
-ds = [10, 20, 50, 100]
+ds = [100] #10, 20, 50, 100
 
 # Create results directory if it doesn't exist
 results_dir = "results"

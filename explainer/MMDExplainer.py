@@ -30,22 +30,27 @@ class MMDExplainer:
             self.coef_x = self.n ** 2
             self.coef_z = self.m ** 2
 
-        self.gamma_x = kwargs.get("gamma_x", None)
-        self.gamma_z = kwargs.get("gamma_z", None)
-        self.gamma_xz = kwargs.get("gamma_xz", None)
+        self.gamma = kwargs.get("gamma", None)
         
-        if self.gamma_x is None:
-            self.gamma_x = self.compute_median_heuristic(self.X)
-        
-        if self.gamma_z is None:
-            self.gamma_z = self.compute_median_heuristic(self.Z)
+        if self.gamma is None:
+             self.gamma = self.compute_median_heuristic(np.vstack([self.X, self.Z]))
 
-        if self.gamma_xz is None:
-            self.gamma_xz = self.compute_median_heuristic(self.X, self.Z)
+        # self.gamma_x = kwargs.get("gamma_x", None)
+        # self.gamma_z = kwargs.get("gamma_z", None)
+        # self.gamma_xz = kwargs.get("gamma_xz", None)
         
-        self.KXs = self._compute_kernels(self.X, self.gamma_x)
-        self.KZs = self._compute_kernels(self.Z, self.gamma_z)
-        self.KXZs = self._compute_cross_kernel(self.X, self.Z, self.gamma_xz)
+        # if self.gamma_x is None:
+        #     self.gamma_x = self.compute_median_heuristic(self.X)
+        
+        # if self.gamma_z is None:
+        #     self.gamma_z = self.compute_median_heuristic(self.Z)
+
+        # if self.gamma_xz is None:
+        #     self.gamma_xz = self.compute_median_heuristic(self.X, self.Z)
+        
+        self.KXs = self._compute_kernels(self.X, self.gamma)
+        self.KZs = self._compute_kernels(self.Z, self.gamma)
+        self.KXZs = self._compute_cross_kernel(self.X, self.Z, self.gamma)
         
         self.mu = self.precompute_mu(self.d)
 
@@ -162,9 +167,9 @@ if __name__ == "__main__":
     print("MMD Shapley Values:", sv)
     print("Sum of Shapley values:", np.sum(sv))
 
-    K_X = rbf_kernel(X, gamma = explainer.gamma_x)
-    K_Z = rbf_kernel(Z, gamma = explainer.gamma_z)
-    K_XZ = rbf_kernel(X, Z, gamma = explainer.gamma_xz)
+    K_X = rbf_kernel(X, gamma = explainer.gamma)
+    K_Z = rbf_kernel(Z, gamma = explainer.gamma)
+    K_XZ = rbf_kernel(X, Z, gamma = explainer.gamma)
     X_contribution = ((explainer.n * (explainer.n-1) )**-1) * ( np.sum(K_X) - np.sum(np.diag(K_X)) )
     Z_contribution = ((explainer.m * (explainer.m-1) )**-1) * ( np.sum(K_Z) - np.sum(np.diag(K_Z)) )
     XZ_contribution = 2 * np.mean(K_XZ)
