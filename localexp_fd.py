@@ -40,33 +40,33 @@ def compute_y(k_vectors, samples, alpha):
     return np.array(y)  
 
 # Define the number of features for each dataset
-ds = [100] #10, 20, 50, 100
+ds = [10, 20, 50, 70]#
+n_instances = 5
 
 # Create results directory if it doesn't exist
 results_dir = "results"
 os.makedirs(results_dir, exist_ok=True)
+excel_file_name = "sv_second_try.xlsx"
 
 plot_only = False
 if not plot_only:
     for d in ds:
         # Generate dataset
         X, y = make_regression(n_samples=50*d, n_features=d, noise=0.1)
-        scaler_X = StandardScaler()
-        scaler_y = StandardScaler()
-        X = scaler_X.fit_transform(X)
-        y = scaler_y.fit_transform(y.reshape(-1, 1)).flatten()
+        # scaler_X = StandardScaler()
+        # scaler_y = StandardScaler()
+        # X = scaler_X.fit_transform(X)
+        # y = scaler_y.fit_transform(y.reshape(-1, 1)).flatten()
 
         # Optimize SVM
         svm_optimized = optimize_svm_rbf(X, y, n_trials=10)
         model = svm_optimized['model']
 
-        # Select 100 instances
-        n_instances = 100
         indices = np.random.choice(X.shape[0], size=n_instances, replace=False)
         X_tbx = X[indices, :]
 
         # Create Excel file
-        excel_file = os.path.join(results_dir, f"sv_d{d}_normalized.xlsx")
+        excel_file = os.path.join(results_dir, f"d{d}_" + excel_file_name)
         workbook = Workbook()
         sheet_rbf = workbook.active
         sheet_rbf.title = "RBFExplainer"
@@ -89,7 +89,7 @@ if not plot_only:
 
         # Compute Shapley regression values with varying number of samples
         max_samples = min(2**d, 100000)
-        sample_sizes = np.logspace(np.log10(100), np.log10(max_samples), num=10, dtype=int)
+        sample_sizes = np.logspace(np.log10(200), np.log10(max_samples), num=10, dtype=int)
 
         shapley_regression_times = []
         for sample_size in sample_sizes:
@@ -99,17 +99,16 @@ if not plot_only:
             shapley_regression_values = []
             shapley_regression_times_instance = []
 
+            samples_weights = kernel_shap_sampling(d, sample_size)
+            samples = np.array([t[0] for t in samples_weights])
+            weights = np.array([t[1] for t in samples_weights])
+
+            samples = np.vstack([samples, np.ones(samples[0].shape)]).astype(int)
+            weights = np.hstack([np.ones_like(weights), 1e30])
+
             for i, x in enumerate(X_tbx):
                 start_time = time.time()
-                
                 k_vectors = np.array(explainer.compute_kernel_vectors(X[model.support_, :], x))
-                samples_weights = kernel_shap_sampling(d, sample_size)
-                samples = np.array([t[0] for t in samples_weights])
-                weights = np.array([t[1] for t in samples_weights])
-
-                samples = np.vstack([samples, np.ones(samples[0].shape)]).astype(int)
-                weights = np.hstack([weights, 1e30])
-
                 y_values = compute_y(k_vectors, samples, model.dual_coef_.squeeze())
 
                 shap_reg = Shapley_regression(np.array(samples, dtype='float'), y_values, weights)
@@ -128,14 +127,14 @@ if not plot_only:
         workbook.save(excel_file)
 
 # Plot results
-fig, axes = plt.subplots(1, 4, figsize=(15, 5))
+fig, axes = plt.subplots(1, 4, figsize=(15, 5), sharey=False)
 axes = axes.flatten()
 n_instances = 100
-ds = [10, 20, 50, 100]
+ds = [10, 20, 50]
 
 for idx, d in enumerate(ds):
     # Load results
-    excel_file = os.path.join(results_dir, f"sv_d{d}_normalized.xlsx")
+    excel_file = os.path.join(results_dir, f"d{d}_" + excel_file_name)
     workbook = load_workbook(excel_file)
 
     # Extract RBFExplainer results
@@ -160,19 +159,19 @@ for idx, d in enumerate(ds):
         sheet = workbook[sheet_name]
         shapley_regression_values = np.array([row[1:d+1] for row in sheet.iter_rows(min_row=1, max_row=n_instances, values_only=True)])
 
-        errors = np.linalg.norm(shapley_regression_values - rbf_shapley_values, axis=1, ord=1) #/ abs(np.sum(rbf_shapley_values, axis=1))
+        errors = np.mean((abs(shapley_regression_values - rbf_shapley_values) / abs(rbf_shapley_values)), axis=1)  # np.linalg.norm(shapley_regression_values - rbf_shapley_values, axis=1, ord=1) / abs(np.sum(rbf_shapley_values, axis=1))
         delta_sv.append(errors)
 
     delta_sv = np.array(delta_sv)
 
     # Plot error bars and fill_between
-    for i in range(delta_sv.shape[1]):
-        axes[idx].plot(sample_sizes, delta_sv[:, i], alpha=0.5, label=f"Instance {i+1}" if i < 5 else None)
+    # for i in range(delta_sv.shape[1]):
+    #     axes[idx].plot(sample_sizes, delta_sv[:, i], alpha=0.5, label=f"Instance {i+1}" if i < 5 else None)
 
-    # mean_errors = np.mean(delta_sv, axis=1)
-    # std_errors = np.std(delta_sv, axis=1)
-    # axes[idx].plot(sample_sizes, mean_errors, color="black", label="Mean Error", linewidth=2)
-    # mean_errors = np.mean(delta_sv, axis=1)
+    median_error = np.median(delta_sv, axis=1)
+    std_errors = np.std(delta_sv, axis=1)
+    axes[idx].plot(sample_sizes, median_error, color="black", label="Mean Error", linewidth=2)
+    # mean_errors = np.mdian(delta_sv, axis=1)
     # std_errors = np.std(delta_sv, axis=1)
     # axes[idx].errorbar(sample_sizes, mean_errors, yerr=std_errors, label="Error")
     # axes[idx].fill_between(sample_sizes, mean_errors - std_errors, mean_errors + std_errors, alpha=0.2)
@@ -185,7 +184,7 @@ for idx, d in enumerate(ds):
 
 plt.tight_layout()
 plt.show()
-plt.savefig(f"results/delta_shapley_samples.png", dpi=500, format='png', bbox_inches='tight')
+plt.savefig(f"results/delta_shapley_samples_second_run.png", dpi=500, format='png', bbox_inches='tight')
 
 
 # Boxplot execution times

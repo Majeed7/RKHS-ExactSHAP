@@ -125,7 +125,7 @@ ax.set_ylabel("Shapley Values")
 
 plt.tight_layout()
 plt.show()
-plt.savefig('results/mmd/hypothesis_testing_wine.png', dpi=500, format='png', bbox_inches='tight')
+plt.savefig('results/mmd/hypothesis_testing_diabetes.png', dpi=500, format='png', bbox_inches='tight')
 
 fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(15, 12))
 
@@ -140,4 +140,4 @@ for i, ax in enumerate(axes.flatten()):
 plt.tight_layout()
 plt.show()
 
-plt.savefig('results/hypothesis_testing_wine_distributions.png', dpi=500, format='png', bbox_inches='tight')
+plt.savefig('results/hypothesis_testing_diabetes_distributions.png', dpi=500, format='png', bbox_inches='tight')
