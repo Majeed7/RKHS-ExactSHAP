@@ -282,7 +282,7 @@ def select_features_incrementally(X, y, ranked_features):
 
 def main():
     # Load the Excel file with feature importance data
-    feature_importance_file = "results/fs_importance.xlsx"
+    feature_importance_file = "fs_importance.xlsx"
     wb = load_workbook(feature_importance_file)
 
     # Create a new workbook for storing results
