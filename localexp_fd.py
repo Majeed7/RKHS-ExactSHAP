@@ -41,7 +41,8 @@ def compute_y(k_vectors, samples, alpha):
 
 # Define the number of features for each dataset
 ds = [10, 20, 50, 70]#
-n_instances = 5
+n_instances = 100
+n_trials = 100
 
 # Create results directory if it doesn't exist
 results_dir = "results"
@@ -59,7 +60,7 @@ if not plot_only:
         # y = scaler_y.fit_transform(y.reshape(-1, 1)).flatten()
 
         # Optimize SVM
-        svm_optimized = optimize_svm_rbf(X, y, n_trials=10)
+        svm_optimized = optimize_svm_rbf(X, y, n_trials=n_trials)
         model = svm_optimized['model']
 
         indices = np.random.choice(X.shape[0], size=n_instances, replace=False)
