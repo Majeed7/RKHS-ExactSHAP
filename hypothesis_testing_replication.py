@@ -32,7 +32,7 @@ n_trials = 1000  # Number of trials
 estimation_type = "V"
 mode = 'independent'
 
-plot_only = True
+plot_only = False
 
 if not plot_only:
 
