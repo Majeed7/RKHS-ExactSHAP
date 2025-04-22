@@ -40,24 +40,24 @@ def compute_y(k_vectors, samples, alpha):
     return np.array(y)  
 
 # Define the number of features for each dataset
-ds = [10, 30]#, 50, 70]#
+ds = [10, 20, 30, 50]#, 50, 70]#
 n_instances = 100
 n_trials = 100
 
 # Create results directory if it doesn't exist
 results_dir = "results"
 os.makedirs(results_dir, exist_ok=True)
-excel_file_name = "sv_second_try.xlsx"
+excel_file_name = "sv_normalized.xlsx"
 
-plot_only = True
+plot_only = False
 if not plot_only:
     for d in ds:
         # Generate dataset
         X, y = make_regression(n_samples=50*d, n_features=d, noise=0.1)
-        # scaler_X = StandardScaler()
-        # scaler_y = StandardScaler()
-        # X = scaler_X.fit_transform(X)
-        # y = scaler_y.fit_transform(y.reshape(-1, 1)).flatten()
+        scaler_X = StandardScaler()
+        scaler_y = StandardScaler()
+        X = scaler_X.fit_transform(X)
+        y = scaler_y.fit_transform(y.reshape(-1, 1)).flatten()
 
         # Optimize SVM
         svm_optimized = optimize_svm_rbf(X, y, n_trials=n_trials)
@@ -132,6 +132,7 @@ fig, axes = plt.subplots(1, 4, figsize=(15, 5), sharey=False)
 axes = axes.flatten()
 n_instances = 100
 ds = [10, 20, 30, 50]
+type = "absolute" # "absolute" or "relative"
 
 for idx, d in enumerate(ds):
     # Load results
@@ -159,8 +160,10 @@ for idx, d in enumerate(ds):
         sheet_name = f"samples_{sample_size}"
         sheet = workbook[sheet_name]
         shapley_regression_values = np.array([row[1:d+1] for row in sheet.iter_rows(min_row=1, max_row=n_instances, values_only=True)])
-
-        errors = np.mean((abs(shapley_regression_values - rbf_shapley_values) / abs(rbf_shapley_values)), axis=1) #  # np.linalg.norm(shapley_regression_values - rbf_shapley_values, axis=1, ord=1) / abs(np.sum(rbf_shapley_values, axis=1))
+        if type == "absolute":
+            errors = np.linalg.norm(shapley_regression_values - rbf_shapley_values, axis=1, ord=1) 
+        else:   
+            errors = np.mean((abs(shapley_regression_values - rbf_shapley_values) / abs(rbf_shapley_values)), axis=1) 
         delta_sv.append(errors)
 
     delta_sv = np.array(delta_sv)
@@ -168,19 +171,19 @@ for idx, d in enumerate(ds):
     # Plot error bars and fill_between
     # for i in range(delta_sv.shape[1]):
     #     axes[idx].plot(sample_sizes, delta_sv[:, i], alpha=0.5, label=f"Instance {i+1}" if i < 5 else None)
-
+    delta_sv = (delta_sv / abs(np.sum(rbf_shapley_values, axis=1)))
     median_error = np.median(delta_sv, axis=1)
-    std_errors = np.std(delta_sv, axis=1)
+    std_errors = scipy.stats.median_abs_deviation(delta_sv, axis=1) #np.std(delta_sv, axis=1)
     axes[idx].plot(sample_sizes, median_error, color="black", label="Mean Error", linewidth=2)
     mean_errors = np.median(delta_sv, axis=1)
-    std_errors = np.std(delta_sv, axis=1)
+    std_errors = scipy.stats.median_abs_deviation(delta_sv, axis=1) #np.std(delta_sv, axis=1)
     axes[idx].errorbar(sample_sizes, mean_errors, yerr=std_errors, label="Error")
     axes[idx].fill_between(sample_sizes, mean_errors - std_errors, mean_errors + std_errors, alpha=0.2)
     
-    #axes[idx].set_xscale("log")
+    axes[idx].set_xscale("log")
     axes[idx].set_title(f"d={d}")
     #axes[idx].set_xlabel("Number of Samples")
-    axes[0].set_ylabel("Absolute Error")
+    axes[0].set_ylabel(f"{type} Error")
     axes[-1].legend()
 
 plt.tight_layout()
