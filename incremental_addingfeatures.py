@@ -189,7 +189,7 @@ def train_gp(X, y, n_splits=5):
     if is_classification:
         gp = GaussianProcessClassifier(kernel=kernel, optimizer='fmin_l_bfgs_b', n_jobs=-1)
     else:
-        gp = GaussianProcessRegressor(kernel=kernel, optimizer='fmin_l_bfgs_b', n_jobs=-1)
+        gp = GaussianProcessRegressor(kernel=kernel, optimizer='fmin_l_bfgs_b')
 
     # Setup K-fold Cross Validation
     kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
@@ -340,7 +340,7 @@ def main():
                 std_row = [feature_selector + "_std"] + [result['std_score'] for result in performance]
                 result_sheet.append(std_row)
                 features_no_selected = [result['num_features'] for result in performance]
-            result_sheet.append(['selected_features'] + features_no_selected)
+            result_sheet.append([f'selected_features ({X.shape[1]})'] + features_no_selected)
             # Save the results to a new Excel file
             results_wb.save(f"results/incremental_feature_gp_replica{replication}.xlsx")
 
