@@ -49,7 +49,7 @@ results_dir = "results"
 os.makedirs(results_dir, exist_ok=True)
 excel_file_name = "sv_second_try.xlsx"
 
-plot_only = False
+plot_only = True
 if not plot_only:
     for d in ds:
         # Generate dataset

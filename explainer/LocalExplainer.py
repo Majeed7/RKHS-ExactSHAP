@@ -106,7 +106,37 @@ class ProductKernelLocalExplainer:
         
         return shapley_values
 
+    def _compute_shapley_value(self, kernel_vectors, feature_index):
+        """
+        Compute the Shapley value for a specific feature of an instance.
 
+        Args:
+            X: The dataset (2D array) used to train the model.
+            x: The instance (1D array) for which to compute the Shapley value.
+            feature_index: Index of the feature.
+
+        Returns:
+            Shapley value for the specified feature.
+        """
+
+        alpha = self.alpha 
+        cZ_minus_j = [kernel_vectors[i] for i in range(self.d) if i != feature_index]
+        e_polynomials = self.compute_elementary_symmetric_polynomials(cZ_minus_j)
+        mu_coefficients = self.precompute_mu(self.d)
+        
+        # Compute kernel vector for the chosen feature
+        k_j = kernel_vectors[feature_index]
+        onevec = np.ones_like(k_j)
+        
+        # Compute the Shapley value
+        result = np.zeros_like(k_j)
+        for q in range(self.d):
+            if q < len(e_polynomials):
+                result += mu_coefficients[q] * e_polynomials[q]
+        
+        shapley_value = alpha.dot((k_j - onevec) * result)
+        return shapley_value.item()
+    
 '''
 This class is a subclass of ProductKernelLocalExplainer. It is used to compute Shapley values for a model with RBF kernel.
 Supported models: SVR, SVM, and GPClassifier with RBF kernel.

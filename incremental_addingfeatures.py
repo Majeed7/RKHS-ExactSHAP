@@ -68,7 +68,7 @@ def train_rf(X, y, n_split=5):
     if problem_type == 'continuous' or problem_type == 'unknown':
         # If the target variable is numeric, treat it as regression
         model = RandomForestRegressor(random_state=42)
-        scoring = 'neg_mean_squared_error'  # For regression, we use negative MSE as scoring
+        scoring = 'neg_mean_absolute_percentage_error'  # For regression, we use negative MAPE as scoring
     else:
         # If the target variable is categorical, treat it as classification
         model = RandomForestClassifier(random_state=42)
@@ -183,7 +183,7 @@ def train_gp(X, y, n_splits=5):
         is_classification = True   # Classification problem
 
     # Define the kernel for GP
-    kernel = C(1.0, (1e-4, 1e1)) * RBF(1.0, (1e-4, 1e1))
+    kernel = C(1.0, (1e-4, 1e1)) * RBF(1.0, (1e-4, 10))
 
     # Initialize the model
     if is_classification:
@@ -214,7 +214,7 @@ def train_gp(X, y, n_splits=5):
             score = accuracy_score(y_val_fold, y_pred)
         else:
             # Calculate Mean Squared Error for regression
-            score = mean_squared_error(y_val_fold, y_pred)
+            score = mean_absolute_percentage_error(y_val_fold, y_pred)
         
         scores.append(score)
 
@@ -251,7 +251,7 @@ def select_features_incrementally(X, y, ranked_features):
     selected_features = []
 
     total_features = X.shape[1]
-    i = math.ceil(total_features * 0.05)  # Start by selecting the top 10% of features
+    i = math.ceil(total_features * 0.1)  # Start by selecting the top 10% of features
 
     while i <= (total_features / 2):
         # Select the top `i` ranked features
@@ -261,12 +261,12 @@ def select_features_incrementally(X, y, ranked_features):
         X_subset = X[:, selected_features]
 
         # Train the GP model on the selected features and evaluate
-        best_score, avg_score, std_score = train_rf(X_subset, y) #  avg_score, std_score = train_gp(X_subset, y) # avg_score, std_score = train_single_gp(X_subset, y) # 
+        avg_score, std_score = train_gp(X_subset, y) # best_score, avg_score, std_score = train_rf(X_subset, y) #   avg_score, std_score = train_single_gp(X_subset, y) # 
 
         # Track performance for this number of selected features
         performance.append({
             'num_features': i,
-            'best_score': best_score,
+            'best_score': 0,
             'avg_score': avg_score,
             'std_score': std_score
         })
@@ -309,8 +309,8 @@ def main():
             result_sheet = results_wb.create_sheet(title=sheet_name)
 
             # Set column titles dynamically
-            score_titles = ["Accuracy"] if is_classification else ["MSE"]
-            result_sheet.append(["Feature Selector"] + score_titles)
+            score_titles = "Accuracy" if is_classification else "MSE"
+            result_sheet.append([f"FS_{score_titles}"])
 
             # Process each feature selector (row) in the sheet
             for row in sheet.iter_rows(min_row=2, values_only=True):
@@ -329,8 +329,8 @@ def main():
                 performance = select_features_incrementally(X, y, ranked_features)
 
                 # First row for the best scores
-                best_row = [feature_selector + "_best"] + [result['best_score'] for result in performance]
-                result_sheet.append(best_row)
+                # best_row = [feature_selector + "_best"] + [result['best_score'] for result in performance]
+                # result_sheet.append(best_row)
 
                 # Second row for the average scores
                 avg_row = [feature_selector + "_avg"] + [result['avg_score'] for result in performance]
@@ -339,9 +339,10 @@ def main():
                 # # Third row for the standard deviation scores
                 std_row = [feature_selector + "_std"] + [result['std_score'] for result in performance]
                 result_sheet.append(std_row)
-
+                features_no_selected = [result['num_features'] for result in performance]
+            result_sheet.append(['selected_features'] + features_no_selected)
             # Save the results to a new Excel file
-            results_wb.save(f"results/incremental_feature_rf_replica{replication}.xlsx")
+            results_wb.save(f"results/incremental_feature_gp_replica{replication}.xlsx")
 
         except Exception as e:
             print(f"{sheet_name} could not be processed! Error: {e}")
