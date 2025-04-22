@@ -40,7 +40,7 @@ def compute_y(k_vectors, samples, alpha):
     return np.array(y)  
 
 # Define the number of features for each dataset
-ds = [10, 20, 50, 70]#
+ds = [10, 30]#, 50, 70]#
 n_instances = 100
 n_trials = 100
 
@@ -131,7 +131,7 @@ if not plot_only:
 fig, axes = plt.subplots(1, 4, figsize=(15, 5), sharey=False)
 axes = axes.flatten()
 n_instances = 100
-ds = [10, 20, 50]
+ds = [10, 20, 30, 50]
 
 for idx, d in enumerate(ds):
     # Load results
@@ -160,7 +160,7 @@ for idx, d in enumerate(ds):
         sheet = workbook[sheet_name]
         shapley_regression_values = np.array([row[1:d+1] for row in sheet.iter_rows(min_row=1, max_row=n_instances, values_only=True)])
 
-        errors = np.mean((abs(shapley_regression_values - rbf_shapley_values) / abs(rbf_shapley_values)), axis=1)  # np.linalg.norm(shapley_regression_values - rbf_shapley_values, axis=1, ord=1) / abs(np.sum(rbf_shapley_values, axis=1))
+        errors = np.mean((abs(shapley_regression_values - rbf_shapley_values) / abs(rbf_shapley_values)), axis=1) #  # np.linalg.norm(shapley_regression_values - rbf_shapley_values, axis=1, ord=1) / abs(np.sum(rbf_shapley_values, axis=1))
         delta_sv.append(errors)
 
     delta_sv = np.array(delta_sv)
@@ -172,12 +172,12 @@ for idx, d in enumerate(ds):
     median_error = np.median(delta_sv, axis=1)
     std_errors = np.std(delta_sv, axis=1)
     axes[idx].plot(sample_sizes, median_error, color="black", label="Mean Error", linewidth=2)
-    # mean_errors = np.mdian(delta_sv, axis=1)
-    # std_errors = np.std(delta_sv, axis=1)
-    # axes[idx].errorbar(sample_sizes, mean_errors, yerr=std_errors, label="Error")
-    # axes[idx].fill_between(sample_sizes, mean_errors - std_errors, mean_errors + std_errors, alpha=0.2)
+    mean_errors = np.median(delta_sv, axis=1)
+    std_errors = np.std(delta_sv, axis=1)
+    axes[idx].errorbar(sample_sizes, mean_errors, yerr=std_errors, label="Error")
+    axes[idx].fill_between(sample_sizes, mean_errors - std_errors, mean_errors + std_errors, alpha=0.2)
     
-    axes[idx].set_xscale("log")
+    #axes[idx].set_xscale("log")
     axes[idx].set_title(f"d={d}")
     #axes[idx].set_xlabel("Number of Samples")
     axes[0].set_ylabel("Absolute Error")

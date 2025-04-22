@@ -375,6 +375,11 @@ def kernel_shap_sampling(M, nsamples):
                 kernelWeights[i] *= factor
 
     # Assemble final list of samples with their weights
+    if len(samples) > nsamples:
+        selected_indices = np.random.choice(len(samples), nsamples, replace=False)
+        samples = [samples[i] for i in selected_indices]
+        kernelWeights = [kernelWeights[i] for i in selected_indices]
+        
     final_samples = [(mask, weight) for mask, weight in zip(samples, kernelWeights)]
     return final_samples
 
