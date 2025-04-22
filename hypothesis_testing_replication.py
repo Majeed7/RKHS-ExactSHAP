@@ -162,7 +162,7 @@ for i in range(d):
 for i in range(d, len(axes_case1_loaded)):
     axes_case1_loaded[i].axis('off')
 
-fig_case1_loaded.savefig(f"results/mmd/hypothesis_testing_histograms_case1_{mode}_{estimation_type}stat.png", dpi=500, format='png', bbox_inches='tight')
+fig_case1_loaded.savefig(f"results/mmd/hypothesis_testing_histograms_case1_{mode}_{estimation_type}stat_2.png", dpi=500, format='png', bbox_inches='tight')
 
 plt.tight_layout(rect=[0, 0, 1, 0.95])
 plt.show()
@@ -199,7 +199,7 @@ plt.tight_layout()
 
 plt.tight_layout(rect=[0, 0, 1, 0.95])
 plt.show()
-fig_case2_loaded.savefig(f"results/mmd/hypothesis_testing_histograms_case2_{mode}_{estimation_type}stat.png", dpi=500, format='png', bbox_inches='tight')
+fig_case2_loaded.savefig(f"results/mmd/hypothesis_testing_histograms_case2_{mode}_{estimation_type}stat_2.png", dpi=500, format='png', bbox_inches='tight')
 plt.close()
 
 print("Histograms of loaded Shapley values saved in the 'results' folder.")

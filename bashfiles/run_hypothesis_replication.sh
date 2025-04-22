@@ -30,12 +30,14 @@ parameter=$1  # $1 refers to the first argument passed to the script
 echo "Running Python script..."
 
 # Nested loop to call the script with two parameters
-for param1 in i d; do
-    for param2 in V U; do
-        echo "Running with parameters: $param1 and $param2"
-        python ~/RKHS-ExactSHAP/hypothesis_testing_replication.py "$param1" "$param2"
-    done
-done
+# for param1 in i d; do
+#     for param2 in V U; do
+#         echo "Running with parameters: $param1 and $param2"
+#         python ~/RKHS-ExactSHAP/hypothesis_testing_replication.py "$param1" "$param2"
+#     done
+# done
+
+python ~/RKHS-ExactSHAP/hypothesis_testing_replication.py "i" "V"
 
 # Deactivate the environment
 deactivate

@@ -49,7 +49,7 @@ results_dir = "results"
 os.makedirs(results_dir, exist_ok=True)
 excel_file_name = "sv_normalized.xlsx"
 
-plot_only = False
+plot_only = True
 if not plot_only:
     print("Generating datasets and computing Shapley values...")
     for d in ds:
@@ -133,7 +133,7 @@ fig, axes = plt.subplots(1, 4, figsize=(15, 5), sharey=False)
 axes = axes.flatten()
 n_instances = 100
 ds = [10, 20, 30, 50]
-type = "absolute" # "absolute" or "relative"
+type = "relative" # "absolute" or "relative"
 
 for idx, d in enumerate(ds):
     # Load results
