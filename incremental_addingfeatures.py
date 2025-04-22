@@ -189,7 +189,7 @@ def train_gp(X, y, n_splits=5):
     if is_classification:
         gp = GaussianProcessClassifier(kernel=kernel, optimizer='fmin_l_bfgs_b', n_jobs=-1)
     else:
-        gp = GaussianProcessRegressor(kernel=kernel, optimizer='fmin_l_bfgs_b', j_jobs=-1)
+        gp = GaussianProcessRegressor(kernel=kernel, optimizer='fmin_l_bfgs_b', n_jobs=-1)
 
     # Setup K-fold Cross Validation
     kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
