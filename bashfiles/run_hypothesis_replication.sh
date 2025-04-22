@@ -26,16 +26,16 @@ nvcc --version
 # Accept parameter from sbatch command
 parameter=$1  # $1 refers to the first argument passed to the script
 
-# Check if a parameter is passed
-if [ -z "$parameter" ]; then
-    echo "No argument passed. Using default value: 0.1"
-    parameter=0  # Default value
-fi
-
 # Run the Python script
 echo "Running Python script..."
-python ~/RKHS-ExactSHAP/hypothesis_testing_replication.py "$parameter"
 
+# Nested loop to call the script with two parameters
+for param1 in i d; do
+    for param2 in V U; do
+        echo "Running with parameters: $param1 and $param2"
+        python ~/RKHS-ExactSHAP/hypothesis_testing_replication.py "$param1" "$param2"
+    done
+done
 
 # Deactivate the environment
 deactivate

@@ -36,22 +36,26 @@ plot_only = False
 
 if not plot_only:
 
-    if len(sys.argv) < 2:
-        print("No argument passed. Using default value: 1")
-        mode = "independent"
+    if len(sys.argv) < 3:
+        print("Two arguments required. Using default value: mode indepdent estimation type V")
+
     else:
         # Retrieve the parameter passed from Bash
-        parameter = sys.argv[1]
+        parameter_1 = sys.argv[1]
+        parameter_2 = sys.argv[2]
 
         # Try converting the argument to a number
         try:
             # Try converting to an integer
-            mode_index = int(parameter)
-            mode = "independent" if mode_index == 0 else "dependent"
+            mode = "independent" if parameter_1 == 'i' else "dependent"
+            estimation_type = parameter_2
+            if estimation_type not in ["V", "U"]:
+                estimation_type = "V"
 
         except ValueError:
             # If it fails, try converting to a float
             mode = "independent"
+            estimation_type = parameter_1
             print("Cannot process the value. Using default value: 0.1")
 
 
@@ -85,27 +89,29 @@ if not plot_only:
         # Combine the two parts to form the full dataset X
         X = np.hstack((X1, X2))
 
-        # Generate the second dataset Y
+        # Generate the second dataset Z
         # The first d' features are the same as in X
-        Y1 = X1
+        Z1 = np.random.multivariate_normal(mean=mean1, cov=cov1, size=n_samples)
 
         # The remaining d-d' features are sampled from a Student's t-distribution
         # Match the moments of the features in X2
         X2_mean = np.mean(X2, axis=0)
         X2_std = np.std(X2, axis=0)
-        Y2 = t.rvs(df=3, loc=X2_mean, scale=X2_std, size=(n_samples, d - d_prime))
+        Z2 = t.rvs(df=3, loc=X2_mean, scale=X2_std, size=(n_samples, d - d_prime))
 
-        # Combine the two parts to form the full dataset Y
-        Y = np.hstack((Y1, Y2))
+        # Combine the two parts to form the full dataset Z
+        Z = np.hstack((Z1, Z2))
 
-        # Case 1: Compute Shapley values for X and Y
-        explainer = MMDExplainer(X=X, Z=Y, estimation_type=estimation_type)
+        # Case 1: Compute Shapley values for X and Z
+        explainer = MMDExplainer(X=X, Z=Z, estimation_type=estimation_type)
         sv_case1 = explainer.explain()
         sv_case1 = n_samples * np.array(sv_case1)
         shapley_values_case1.append(sv_case1)
 
-        # Case 2: Compute Shapley values for X1 and Y1
-        explainer2 = MMDExplainer(X=X1, Z=Y1, estimation_type=estimation_type)
+        # Case 2: Compute Shapley values for X and Z with equal distribution
+        Z2 = np.random.multivariate_normal(mean=mean2, cov=cov2, size=n_samples)
+        Z = np.hstack((Z1, Z2))
+        explainer2 = MMDExplainer(X=X, Z=Z, estimation_type=estimation_type)
         sv_case2 = explainer2.explain()
         sv_case2 = n_samples * np.array(sv_case2)
         shapley_values_case2.append(sv_case2)

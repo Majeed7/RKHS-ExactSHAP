@@ -272,10 +272,10 @@ def select_features_incrementally(X, y, ranked_features):
         })
 
         # Increment features by 10% of the total number of features
-        i = math.ceil(total_features * 0.05 * (len(performance) + 1))  # Add 10% more each time
+        i = math.ceil(total_features * 0.10 * (len(performance) + 1))  # Add 10% more each time
 
         # Ensure i does not exceed the total number of features
-        if i > (total_features / 2):
+        if i > (total_features / 4):
             break #i = int(total_features / 2)
 
     return performance
@@ -333,12 +333,12 @@ def main():
                 result_sheet.append(best_row)
 
                 # Second row for the average scores
-                # avg_row = [feature_selector + "_avg"] + [result['avg_score'] for result in performance]
-                # result_sheet.append(avg_row)
+                avg_row = [feature_selector + "_avg"] + [result['avg_score'] for result in performance]
+                result_sheet.append(avg_row)
 
                 # # Third row for the standard deviation scores
-                # std_row = [feature_selector + "_std"] + [result['std_score'] for result in performance]
-                # result_sheet.append(std_row)
+                std_row = [feature_selector + "_std"] + [result['std_score'] for result in performance]
+                result_sheet.append(std_row)
 
             # Save the results to a new Excel file
             results_wb.save(f"results/incremental_feature_rf_replica{replication}.xlsx")
