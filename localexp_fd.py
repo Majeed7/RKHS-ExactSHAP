@@ -51,6 +51,7 @@ excel_file_name = "sv_normalized.xlsx"
 
 plot_only = False
 if not plot_only:
+    print("Generating datasets and computing Shapley values...")
     for d in ds:
         # Generate dataset
         X, y = make_regression(n_samples=50*d, n_features=d, noise=0.1)
