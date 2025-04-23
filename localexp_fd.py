@@ -40,16 +40,16 @@ def compute_y(k_vectors, samples, alpha):
     return np.array(y)  
 
 # Define the number of features for each dataset
-ds = [10, 20, 30, 50]#, 50, 70]#
+ds = [10, 20, 30, 50, 100]#, 50, 70]#
 n_instances = 100
-n_trials = 100
+n_trials = 10
 
 # Create results directory if it doesn't exist
 results_dir = "results"
 os.makedirs(results_dir, exist_ok=True)
-excel_file_name = "sv_normalized.xlsx"
+excel_file_name = "sv_normalized_resolvedExp.xlsx"
 
-plot_only = True
+plot_only = False
 if not plot_only:
     print("Generating datasets and computing Shapley values...")
     for d in ds:

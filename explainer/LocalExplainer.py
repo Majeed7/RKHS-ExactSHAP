@@ -72,6 +72,8 @@ class ProductKernelLocalExplainer:
         Returns:
             e: List of elementary symmetric polynomials .
         """
+        return self.compute_elementary_symmetric_polynomials_dp(kernel_vectors)
+    
         # Compute power sums
         s = [
             sum([np.power(k, p) for k in kernel_vectors])
@@ -89,6 +91,41 @@ class ProductKernelLocalExplainer:
         
         return e
 
+    def compute_elementary_symmetric_polynomials_dp(self, kernel_vectors):
+        """
+        Compute elementary symmetric polynomials using a dynamic programming approach.
+
+        Args:
+            kernel_vectors: List of kernel vectors (1D arrays).
+
+        Returns:
+            elementary: List of elementary symmetric polynomials.
+        """
+        # Initialize with e_0 = 1
+        e = [np.ones_like(kernel_vectors[0])]
+        
+        for k in kernel_vectors:
+            # Prepend and append zeros to handle polynomial multiplication (x - k)
+            new_e = [np.zeros_like(e[0])] * (len(e) + 1)
+            # new_e[0] corresponds to the constant term after multiplying by (x - k)
+            new_e[0] = -k * e[0]
+            # Compute the rest of the terms
+            for i in range(1, len(e)):
+                new_e[i] = e[i-1] - k * e[i]
+            # The highest degree term is x^{len(e)}, coefficient is e[-1] (which is 1 initially)
+            new_e[len(e)] = e[-1].copy()
+            e = new_e
+        
+        # Extract elementary symmetric polynomials from the coefficients
+        n = len(kernel_vectors)
+        elementary = [np.ones_like(e[0])]  # e_0 = 1
+        for r in range(1, n + 1):
+            sign = (-1) ** r
+            elementary_r = sign * e[n - r]
+            elementary.append(elementary_r)
+        
+        return elementary
+    
     def explain_by_kernel_vectors(self, kernel_vectors):
         """
         Compute Shapley values for all features of an instance based on computed feature-wise kernel vectors
