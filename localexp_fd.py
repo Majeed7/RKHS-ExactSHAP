@@ -42,7 +42,7 @@ def compute_y(k_vectors, samples, alpha):
 # Define the number of features for each dataset
 ds = [10, 20, 30, 50, 100]#, 50, 70]#
 n_instances = 100
-n_trials = 10
+n_trials = 100
 
 # Create results directory if it doesn't exist
 results_dir = "results"
