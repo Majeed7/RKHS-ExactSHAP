@@ -135,7 +135,7 @@ class HSICExplainer:
         ]
         return np.array(unnormalized) / math.factorial(d)
 
-    def compute_elementary_symmetric_polynomials(self, kernel_matrices):
+    def compute_elementary_symmetric_polynomials_recursive(self, kernel_matrices):
         """Compute elementary symmetric polynomials given a list of kernel matrices.
         
         Returns:

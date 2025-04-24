@@ -37,7 +37,7 @@ echo "Running Python script..."
 #     done
 # done
 
-python ~/RKHS-ExactSHAP/hypothesis_testing_replication.py "i" "V"
+python ~/RKHS-ExactSHAP/hypothesis_testing_replication.py
 
 # Deactivate the environment
 deactivate

@@ -94,7 +94,7 @@ class MMDExplainer:
         e_XZ = self._compute_esp(KXZs)
         return e_X, e_Z, e_XZ
 
-    def _compute_esp(self, kernel_matrices):
+    def _compute_esp_recursive(self, kernel_matrices):
         s = [sum([np.power(k, p) for k in kernel_matrices]) for p in range(0, len(kernel_matrices) + 1)]
         e = [np.ones_like(kernel_matrices[0])]
         for r in range(1, len(kernel_matrices) + 1):
@@ -103,6 +103,57 @@ class MMDExplainer:
                 term += ((-1) ** (k - 1)) * e[r - k] * s[k]
             e.append(term / r)
         return e
+    
+    def _compute_esp(self, kernel_matrices):
+        """
+        Compute elementary symmetric polynomials (ESPs) using a numerically stable
+        dynamic programming approach.
+        """
+        # Ensure float64 precision for stability
+        kernel_matrices = [np.array(k, dtype=np.float64) for k in kernel_matrices]
+        
+        # Handle empty input edge case
+        if not kernel_matrices:
+            return []
+        
+        # Normalization to prevent overflow
+        max_abs_k = max(np.max(np.abs(k)) for k in kernel_matrices) or 1.0
+        scaled_kernel = [k / max_abs_k for k in kernel_matrices]
+        
+        # Initialize polynomial coefficients: e[degree] = coefficient
+        # Start with e_0 = 1 (constant term)
+        e = [np.ones_like(scaled_kernel[0], dtype=np.float64)]
+        
+        # Sequentially build the polynomial (x - k1)(x - k2)...(x - kn)
+        for k in scaled_kernel:
+            new_e = [np.zeros_like(e[0]) for _ in range(len(e) + 1)]
+            
+            # Constant term: -k * previous_constant_term
+            new_e[0] = -k * e[0]
+            
+            # Middle terms: new_e[i] = previous_e[i-1] - k * previous_e[i]
+            for i in range(1, len(e)):
+                new_e[i] = e[i-1] - k * e[i]
+            
+            # Highest degree term: x^m term (always 1 in our construction)
+            new_e[-1] = e[-1].copy()
+            
+            e = new_e
+        
+        # Extract ESPs from polynomial coefficients
+        n = len(scaled_kernel)
+        elementary = [np.ones_like(e[0])]  # e_0 = 1
+        
+        for r in range(1, n + 1):
+            # Extract coefficient for x^{n-r} and apply sign correction
+            sign = (-1) ** r
+            scaled_e_r = sign * e[n - r]
+            
+            # Reverse the normalization scaling
+            elementary_r = scaled_e_r * (max_abs_k ** r)
+            elementary.append(elementary_r)
+        
+        return elementary
 
     def explain(self):
         shapley_values = np.zeros(self.d)

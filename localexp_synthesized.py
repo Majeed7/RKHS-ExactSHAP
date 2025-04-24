@@ -70,7 +70,7 @@ def compute_feature_wise_rbf_kernel(X_test, X_train, length_scales, constant_val
 # Define the number of samples and features as variables
 mode='deploy'
 n_samples = 1000
-n_features = 30
+n_features = 25
 n_trials = 100
 tbx_no = 10
 
@@ -82,9 +82,10 @@ if mode == 'test':
 
 # Generate synthesized datasets
 datasets = [
-    ("Squared Exponentials", generate_dataset_squared_exponentials(n_samples, n_features)),
-    ("Polynomial Degree 5", generate_dataset_polynomial(n_samples, n_features, degree=5)),
+    ("SinLog", generate_dataset_sinlog(n_samples, n_features)),
+     ("Squared Exponentials", generate_dataset_squared_exponentials(n_samples, n_features)),
     ("Polynomial Degree 10", generate_dataset_polynomial(n_samples, n_features, degree=10)),    
+    ("Polynomial Degree 5", generate_dataset_polynomial(n_samples, n_features, degree=5)),
 ]
 # Prepare a dictionary to store accuracies for each dataset
 dataset_accuracies = {ds_name: {} for ds_name, _ in datasets}
@@ -98,15 +99,6 @@ for ds_name, (X, y, fn, feature_imp, ds) in datasets:
     scaler_y = StandardScaler()
     X_scaled = scaler_X.fit_transform(X)
     y_scaled = scaler_y.fit_transform(y.reshape(-1, 1)).flatten()
-
-    # optimized_svm = optimize_svm_rbf(X, y, n_trials=n_trials)
-    # model = optimized_svm['model']
-    # fn = model.predict
-    
-    # Calculate training error for regression
-    # y_pred_train = model.predict(X)
-    # training_error = np.mean((y_pred_train - y) ** 2)  # Mean Squared Error
-    # print(f"Training Error (MSE) for {ds_name}: {training_error}")
 
     gp = train_gp(X, y)
     constant_value = 1 #gp.kernel_.k1.k1.constant_value

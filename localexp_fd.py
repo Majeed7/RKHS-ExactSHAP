@@ -49,7 +49,7 @@ results_dir = "results"
 os.makedirs(results_dir, exist_ok=True)
 excel_file_name = "sv_normalized_resolvedExp.xlsx"
 
-plot_only = False
+plot_only = True
 if not plot_only:
     print("Generating datasets and computing Shapley values...")
     for d in ds:
@@ -129,10 +129,11 @@ if not plot_only:
         workbook.save(excel_file)
 
 # Plot results
-fig, axes = plt.subplots(1, 4, figsize=(15, 5), sharey=False)
-axes = axes.flatten()
 n_instances = 100
-ds = [10, 20, 30, 50]
+ds = [10, 20, 30, 50, 100]
+fig, axes = plt.subplots(1, len(ds), figsize=(15, 5), sharey=False)
+axes = axes.flatten()
+
 type = "relative" # "absolute" or "relative"
 
 for idx, d in enumerate(ds):
@@ -189,7 +190,7 @@ for idx, d in enumerate(ds):
 
 plt.tight_layout()
 plt.show()
-plt.savefig(f"results/delta_shapley_samples_second_run.png", dpi=500, format='png', bbox_inches='tight')
+fig.savefig(f"results/delta_shapley_samples_second_run.png", dpi=500, format='png', bbox_inches='tight')
 
 
 # Boxplot execution times

@@ -61,7 +61,7 @@ class ProductKernelLocalExplainer:
 
         return np.array(unnormalized_factors) / math.factorial(d) 
     
-    def compute_elementary_symmetric_polynomials(self, kernel_vectors):
+    def compute_elementary_symmetric_polynomials_recursive(self, kernel_vectors):
         """
         Compute elementary symmetric polynomials.
 
@@ -72,7 +72,6 @@ class ProductKernelLocalExplainer:
         Returns:
             e: List of elementary symmetric polynomials .
         """
-        return self.compute_elementary_symmetric_polynomials_dp(kernel_vectors)
     
         # Compute power sums
         s = [
@@ -91,7 +90,7 @@ class ProductKernelLocalExplainer:
         
         return e
 
-    def compute_elementary_symmetric_polynomials_dp(self, kernel_vectors):
+    def compute_elementary_symmetric_polynomials(self, kernel_vectors):
         """
         Compute elementary symmetric polynomials using a dynamic programming approach.
 
@@ -102,9 +101,13 @@ class ProductKernelLocalExplainer:
             elementary: List of elementary symmetric polynomials.
         """
         # Initialize with e_0 = 1
-        e = [np.ones_like(kernel_vectors[0])]
-        
-        for k in kernel_vectors:
+        max_abs_k = max(np.max(np.abs(k)) for k in kernel_vectors) or 1.0
+        scaled_kernel = [k / max_abs_k for k in kernel_vectors]
+
+        # Initialize polynomial coefficients: P_0(x) = 1
+        e = [np.ones_like(scaled_kernel[0], dtype=np.float64)]
+
+        for k in scaled_kernel:
             # Prepend and append zeros to handle polynomial multiplication (x - k)
             new_e = [np.zeros_like(e[0])] * (len(e) + 1)
             # new_e[0] corresponds to the constant term after multiplying by (x - k)
@@ -117,11 +120,11 @@ class ProductKernelLocalExplainer:
             e = new_e
         
         # Extract elementary symmetric polynomials from the coefficients
-        n = len(kernel_vectors)
+        n = len(scaled_kernel)
         elementary = [np.ones_like(e[0])]  # e_0 = 1
         for r in range(1, n + 1):
             sign = (-1) ** r
-            elementary_r = sign * e[n - r]
+            elementary_r = sign * e[n - r] * (max_abs_k ** r)
             elementary.append(elementary_r)
         
         return elementary

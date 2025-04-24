@@ -65,7 +65,7 @@ def generate_dataset_squared_exponentials(n_samples=100, n_features=10):
 
 
 def generate_dataset_sinlog(n_samples=100, n_features=10):
-    influential_indices = np.arange(0, 2) 
+    influential_indices = np.arange(0, n_features // 3) 
     X = generate_X(n_samples, n_features)
 
     def fn(X):
@@ -117,7 +117,7 @@ def generate_dataset_sin(n_samples=100, n_features=10, noise=0.1):
     return X, y, fn, influential_indices, 'Sine Cosine'
 
 def generate_dataset_poly_sine(n_samples=100, n_features=10):
-    influential_indices = np.arange(0, 2)
+    influential_indices = np.arange(0, n_features // 3)
     X = generate_X(n_samples, n_features)
 
     def fn(X):
