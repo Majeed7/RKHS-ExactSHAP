@@ -25,6 +25,21 @@ from scipy.linalg import solve_triangular
 
 from explainer.LocalExplainer import RBFLocalExplainer, ProductKernelLocalExplainer
 
+plt.rcParams.update({
+    'font.size': 10,     # Set default font size
+    'font.weight': 'bold',  # Set default font weight to bold
+    'axes.labelweight': 'bold',  # Ensure the axis labels are bold
+    'axes.titleweight': 'bold',  # Ensure the titles are bold
+    'figure.titleweight': 'bold',  # Bold for suptitle if you use fig.suptitle()
+    'xtick.labelsize': 8,  # Font size for X-tick labels
+    'ytick.labelsize': 10,  # Font size for Y-tick labels
+    'xtick.major.size': 5,  # Length of major ticks
+    'ytick.major.size': 5,  # Length of major ticks
+    'xtick.minor.size': 3,  # Length of minor ticks
+    'ytick.minor.size': 3   # Length of minor ticks
+})
+
+
 
 results_xsl = Path(f'results/localexp_syn_{time.strftime("%Y%m%d_%H%M%S")}.xlsx')
 
@@ -82,16 +97,65 @@ if mode == 'test':
 
 # Generate synthesized datasets
 datasets = [
-    ("SinLog", generate_dataset_sinlog(n_samples, n_features)),
-     ("Squared Exponentials", generate_dataset_squared_exponentials(n_samples, n_features)),
-    ("Polynomial Degree 10", generate_dataset_polynomial(n_samples, n_features, degree=10)),    
+    #("SinLog", generate_dataset_sinlog(n_samples, n_features)),
     ("Polynomial Degree 5", generate_dataset_polynomial(n_samples, n_features, degree=5)),
+    ("Polynomial Degree 10", generate_dataset_polynomial(n_samples, n_features, degree=10)),    
+     ("Squared Exponentials", generate_dataset_squared_exponentials(n_samples, n_features)),
 ]
 # Prepare a dictionary to store accuracies for each dataset
 dataset_accuracies = {ds_name: {} for ds_name, _ in datasets}
 
 # Prepare a dictionary to store execution times for each dataset
 dataset_execution_times = {ds_name: {} for ds_name, _ in datasets}
+
+plot_only = True
+if plot_only:
+    # Load the Excel file
+    results_df = pd.ExcelFile("results/syn/localexp_syn.xlsx")
+
+    # Iterate through each dataset and plot results
+    fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=True)
+    for i, ds_name in enumerate(dataset_accuracies):
+        # Load accuracies for the dataset
+        accuracy_df = pd.read_excel(results_df, sheet_name=f"{ds_name}_Accuracies")
+        
+        # Prepare data for boxplot
+        accuracy_data = [accuracy_df[method].dropna() for method in accuracy_df.columns]
+        method_names = accuracy_df.columns
+
+        # Create boxplot in the corresponding subplot
+        axes[i].boxplot(accuracy_data, labels=method_names, vert=True, patch_artist=True)
+        axes[i].set_title(f"{ds_name}")
+        axes[i].set_ylabel("Accuracy")
+        #axes[i].set_xlabel("Methods")
+        axes[i].tick_params(axis='x', rotation=45)
+
+    plt.tight_layout()
+    plt.show()
+    fig.savefig(f"results/syn/localexp_syn_boxplot.png", dpi=500, format='png', bbox_inches='tight')
+
+    # Iterate through each dataset and plot execution times
+    fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=False)
+    for i, ds_name in enumerate(dataset_execution_times):
+        # Load execution times for the dataset
+        execution_time_df = pd.read_excel(results_df, sheet_name=f"{ds_name}_ExecutionT")
+        
+        # Extract method names, averages, and standard deviations
+        method_names = execution_time_df["Method"].dropna()
+        averages = execution_time_df.iloc[:, 2].dropna()  # Third column: average
+        std_devs = execution_time_df.iloc[:, 3].dropna()  # Fourth column: standard deviation
+
+        # Create error bar plot in the corresponding subplot
+        axes[i].errorbar(method_names, averages, yerr=std_devs, fmt='o', capsize=5, ecolor='red', label='Execution Time')
+        axes[i].set_title(f"{ds_name}")
+        axes[i].set_ylabel("Execution Time (s)")
+        axes[i].tick_params(axis='x', rotation=45)
+
+    plt.tight_layout()
+    plt.show()
+    fig.savefig(f"results/syn/localexp_syn_execution_time.png", dpi=500, format='png', bbox_inches='tight')
+    
+
 
 # Iterate over datasets
 for ds_name, (X, y, fn, feature_imp, ds) in datasets:
@@ -194,3 +258,5 @@ with pd.ExcelWriter(results_xsl, engine="openpyxl", mode="w") as writer:
         # Create a DataFrame for execution times
         execution_time_df = pd.DataFrame(list(dataset_execution_times[ds_name].items()), columns=["Method", "Execution Time"])
         execution_time_df.to_excel(writer, sheet_name=f"{ds_name}_ExecutionTimes", index=False)
+
+

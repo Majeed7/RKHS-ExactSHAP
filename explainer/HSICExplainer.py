@@ -160,6 +160,61 @@ class HSICExplainer:
         
         return e
     
+    def compute_elementary_symmetric_polynomials(self, kernel_matrices):
+        """Compute elementary symmetric polynomials using stable dynamic programming.
+        
+        Returns:
+            List of elementary symmetric polynomials e for orders 0 to m.
+            e[0] is an array of ones with the same shape as the kernel matrices.
+        """
+        
+        # Convert to float64 for numerical stability
+        kernel_matrices = [np.array(k, dtype=np.float64) for k in kernel_matrices]
+        
+        # Handle empty input case
+        if not kernel_matrices:
+            return [np.ones((1,))]  # Default shape if no inputs
+        
+        # Normalization to prevent overflow
+        max_abs = max(np.max(np.abs(k)) for k in kernel_matrices)
+        scale_factor = max_abs if max_abs > 0 else 1.0
+        scaled_kernels = [k / scale_factor for k in kernel_matrices]
+        
+        # Initialize polynomial coefficients: e[degree] = coefficient
+        # Start with e_0 = 1 (the empty product)
+        e = [np.ones_like(scaled_kernels[0])]
+        
+        # Build polynomial incrementally: (x - k1)(x - k2)...(x - kn)
+        for k in scaled_kernels:
+            new_e = [np.zeros_like(e[0]) for _ in range(len(e) + 1)]
+            
+            # Constant term: -k * previous constant term
+            new_e[0] = -k * e[0]
+            
+            # Middle terms: e[i] = previous_e[i-1] - k * previous_e[i]
+            for i in range(1, len(e)):
+                new_e[i] = e[i-1] - k * e[i]
+            
+            # Highest degree term (x^m term)
+            new_e[-1] = e[-1].copy()
+            
+            e = new_e
+        
+        # Extract elementary polynomials with proper scaling and signs
+        n = len(scaled_kernels)
+        elementary = [np.ones_like(e[0])]  # e_0 = 1
+        
+        for r in range(1, n + 1):
+            # The polynomial coefficients contain (-1)^r e_r at position n-r
+            sign = (-1) ** r
+            scaled_value = sign * e[n - r]
+            
+            # Reverse the normalization scaling
+            elementary_r = scaled_value * (scale_factor ** r)
+            elementary.append(elementary_r)
+        
+        return elementary
+
     def explain(self):
         """Compute Shapley values for each feature's contribution to HSIC.
         

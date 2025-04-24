@@ -118,7 +118,7 @@ if not plot_only:
 
     # Convert results to DataFrames
     df_case1 = pd.DataFrame(shapley_values_case1, columns=[f"V{i}" for i in range(1, d + 1)])
-    df_case2 = pd.DataFrame(shapley_values_case2, columns=[f"V{i}" for i in range(1, d_prime + 1)])
+    df_case2 = pd.DataFrame(shapley_values_case2, columns=[f"V{i}" for i in range(1, d + 1)])
 
     # Save results to an Excel file with two sheets
     output_file = f"results/mmd/hypothesis_testing_sv_{mode}_{estimation_type}stat.xlsx"

@@ -45,9 +45,9 @@ n_instances = 100
 n_trials = 100
 
 # Create results directory if it doesn't exist
-results_dir = "results"
+results_dir = "results/fd"
 os.makedirs(results_dir, exist_ok=True)
-excel_file_name = "sv_normalized_resolvedExp.xlsx"
+excel_file_name = "sv_normalized.xlsx"
 
 plot_only = True
 if not plot_only:
@@ -130,11 +130,11 @@ if not plot_only:
 
 # Plot results
 n_instances = 100
-ds = [10, 20, 30, 50, 100]
+ds = [10, 20, 30, 50]
 fig, axes = plt.subplots(1, len(ds), figsize=(15, 5), sharey=False)
 axes = axes.flatten()
 
-type = "relative" # "absolute" or "relative"
+type = "Relative" # "Absolute" or "Relative"
 
 for idx, d in enumerate(ds):
     # Load results
@@ -162,7 +162,7 @@ for idx, d in enumerate(ds):
         sheet_name = f"samples_{sample_size}"
         sheet = workbook[sheet_name]
         shapley_regression_values = np.array([row[1:d+1] for row in sheet.iter_rows(min_row=1, max_row=n_instances, values_only=True)])
-        if type == "absolute":
+        if type == "Absolute":
             errors = np.linalg.norm(shapley_regression_values - rbf_shapley_values, axis=1, ord=1) 
         else:   
             errors = np.mean((abs(shapley_regression_values - rbf_shapley_values) / abs(rbf_shapley_values)), axis=1) 
@@ -190,7 +190,7 @@ for idx, d in enumerate(ds):
 
 plt.tight_layout()
 plt.show()
-fig.savefig(f"results/delta_shapley_samples_second_run.png", dpi=500, format='png', bbox_inches='tight')
+fig.savefig(f"{results_dir}/delta_shapley_samples_{type}.png", dpi=500, format='png', bbox_inches='tight')
 
 
 # Boxplot execution times
