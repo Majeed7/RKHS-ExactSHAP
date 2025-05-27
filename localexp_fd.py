@@ -15,13 +15,13 @@ from explainer.LocalExplainer import *
 
 
 plt.rcParams.update({
-    'font.size': 10,     # Set default font size
+    'font.size': 12,     # Set default font size
     'font.weight': 'bold',  # Set default font weight to bold
     'axes.labelweight': 'bold',  # Ensure the axis labels are bold
     'axes.titleweight': 'bold',  # Ensure the titles are bold
     'figure.titleweight': 'bold',  # Bold for suptitle if you use fig.suptitle()
-    'xtick.labelsize': 8,  # Font size for X-tick labels
-    'ytick.labelsize': 10,  # Font size for Y-tick labels
+    'xtick.labelsize': 12,  # Font size for X-tick labels
+    'ytick.labelsize': 12,  # Font size for Y-tick labels
     'xtick.major.size': 5,  # Length of major ticks
     'ytick.major.size': 5,  # Length of major ticks
     'xtick.minor.size': 3,  # Length of minor ticks
@@ -131,7 +131,7 @@ if not plot_only:
 # Plot results
 n_instances = 100
 ds = [10, 20, 30, 50]
-fig, axes = plt.subplots(1, len(ds), figsize=(15, 5), sharey=False)
+fig, axes = plt.subplots(1, len(ds), figsize=(13, 2.75), sharey=False)
 axes = axes.flatten()
 
 type = "Relative" # "Absolute" or "Relative"
@@ -170,31 +170,58 @@ for idx, d in enumerate(ds):
 
     delta_sv = np.array(delta_sv)
 
-    # Plot error bars and fill_between
-    # for i in range(delta_sv.shape[1]):
-    #     axes[idx].plot(sample_sizes, delta_sv[:, i], alpha=0.5, label=f"Instance {i+1}" if i < 5 else None)
+    # Normalize delta_sv
     delta_sv = (delta_sv / abs(np.sum(rbf_shapley_values, axis=1)))
-    median_error = np.median(delta_sv, axis=1)
-    std_errors = scipy.stats.median_abs_deviation(delta_sv, axis=1) #np.std(delta_sv, axis=1)
-    axes[idx].plot(sample_sizes, median_error, color="black", label="Mean Error", linewidth=2)
-    mean_errors = np.median(delta_sv, axis=1)
-    std_errors = scipy.stats.median_abs_deviation(delta_sv, axis=1) #np.std(delta_sv, axis=1)
-    axes[idx].errorbar(sample_sizes, mean_errors, yerr=std_errors, label="Error")
+    median_error = np.around(np.median(delta_sv, axis=1), 4)
+    std_errors = np.around(scipy.stats.median_abs_deviation(delta_sv, axis=1), 4)
+    axes[idx].plot(sample_sizes, median_error, color="black", linewidth=2)
+    mean_errors = np.around(np.median(delta_sv, axis=1),4)
+    std_errors = np.around(scipy.stats.median_abs_deviation(delta_sv, axis=1), 4)
+    axes[idx].errorbar(sample_sizes, mean_errors, yerr=std_errors)
     axes[idx].fill_between(sample_sizes, mean_errors - std_errors, mean_errors + std_errors, alpha=0.2)
     
+    # Adjust x-axis scale and labels
     axes[idx].set_xscale("log")
     axes[idx].set_title(f"d={d}")
+    if idx == 0:
+        axes[idx].set_ylabel(f"{type} Error")
     #axes[idx].set_xlabel("Number of Samples")
-    axes[0].set_ylabel(f"{type} Error")
-    axes[-1].legend()
 
-plt.tight_layout()
+    if idx in [0, 1]:
+        if idx == 0:
+            axes[idx].ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+
+            axes[0].minorticks_off()
+            #axes[0].set_yticks(np.array([]))
+            axes[idx].set_xticks(np.array([200, 500, 1000]))
+            axes[idx].set_xticklabels([200, 500, 1000])
+
+        else:
+            axes[idx].yaxis.offsetText.set_visible(False)
+
+            yticks = axes[idx].get_yticks()
+            axes[idx].set_yticklabels([f"{int(tick * 100)}" for tick in yticks])
+            axes[idx].annotate(r"$1e{-2}$", xy=(0, 1), xycoords='axes fraction', fontsize=12, ha='left', va='bottom')
+
+    if idx == 3:
+        axes[0].minorticks_off()
+        axes[idx].set_yticks(np.array([2, 5, 8, 10]))
+        axes[idx].set_yticklabels([2, 5, 8, 10])
+        
+    axes[idx].yaxis.get_offset_text().set_fontsize(8)  # Adjust font size of the offset text
+    axes[idx].yaxis.offsetText.set_visible(True)
+
+# axes[0].tick_params(axis='x', which='both', reset=True)
+# axes[0].set_xticks(np.array([200, 500, 1000]))
+# axes[0].set_xticklabels([200, 500, 1000])
+# Adjust subplot spacing to reduce margins
+plt.tight_layout(pad=0.1, w_pad=0.05, h_pad=0.1)
 plt.show()
-fig.savefig(f"{results_dir}/delta_shapley_samples_{type}.png", dpi=500, format='png', bbox_inches='tight')
+fig.savefig(f"{results_dir}/delta_shapley_samples_{type}.pdf", dpi=500, format='pdf')
 
 
 # Boxplot execution times
-fig, axes = plt.subplots(1, 4, figsize=(15, 5))
+fig, axes = plt.subplots(1, 4, figsize=(13, 3.5))
 axes = axes.flatten()
 
 for idx, d in enumerate(ds):

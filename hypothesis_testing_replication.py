@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 import sys
+import seaborn as sns
 
 ## plot settings    
 plt.rcParams.update({
@@ -32,7 +33,7 @@ n_trials = 1000  # Number of trials
 estimation_type = "V"
 mode = 'independent'
 
-plot_only = False
+plot_only = True
 
 if not plot_only:
 
@@ -162,15 +163,15 @@ for i in range(d):
 for i in range(d, len(axes_case1_loaded)):
     axes_case1_loaded[i].axis('off')
 
-fig_case1_loaded.savefig(f"results/mmd/hypothesis_testing_histograms_case1_{mode}_{estimation_type}stat_2.png", dpi=500, format='png', bbox_inches='tight')
+fig_case1_loaded.savefig(f"results/mmd/hypothesis_testing_histograms_case1_{mode}_{estimation_type}stat_2.pdf", dpi=500, format='pdf', bbox_inches='tight')
 
 plt.tight_layout(rect=[0, 0, 1, 0.95])
 plt.show()
 plt.close()
 
 # Plot histograms for Case 2 from the loaded data
-n_cols = min(5, d_prime)
-n_rows = (d_prime + n_cols - 1) // n_cols
+n_cols = min(5, d)
+n_rows = (d + n_cols - 1) // n_cols
 fig_case2_loaded, axes_case2_loaded = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4 * n_rows), sharey=True)
 axes_case2_loaded = axes_case2_loaded.flatten()
 
@@ -178,20 +179,20 @@ axes_case2_loaded = axes_case2_loaded.flatten()
 x_min = min(df_case2_loaded.min())
 x_max = max(df_case2_loaded.max())
 
-for i in range(d_prime):
+for i in range(d):
     axes_case2_loaded[i].hist(df_case2_loaded[f"V{i+1}"], bins=n_bins, alpha=0.7, edgecolor='black')
     axes_case2_loaded[i].set_title(f"Variable {i+1}")
-    axes_case2_loaded[i].tick_params(axis='x', labelsize=6.5)  # Adjust x-axis tick label size
-    axes_case2_loaded[i].tick_params(axis='y', labelsize=8)  # Adjust y-axis tick label size
-    axes_case2_loaded[i].xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.3f}'))  # Format x-axis ticks
+    #axes_case2_loaded[i].tick_params(axis='x', labelsize=6.5)  # Adjust x-axis tick label size
+    #axes_case2_loaded[i].tick_params(axis='y', labelsize=8)  # Adjust y-axis tick label size
+    #axes_case2_loaded[i].xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.3f}'))  # Format x-axis ticks
     #axes_case2_loaded[i].grid(True)
-    axes_case2_loaded[i].set_xlim(x_min, x_max)  # Set the x-axis range
+    #axes_case2_loaded[i].set_xlim(x_min, x_max)  # Set the x-axis range
 
-for i in range(d_prime):
+for i in range(d):
     if i % 5 == 0:
-        axes_case2_loaded[i].set_ylabel("Frequency", fontsize=8)  # Set smaller font size for y-axis labels
+        axes_case2_loaded[i].set_ylabel("Frequency")  # Set smaller font size for y-axis labels
 
-for i in range(d_prime, len(axes_case2_loaded)):
+for i in range(d, len(axes_case2_loaded)):
     axes_case2_loaded[i].axis('off')
 
 # Adjust layout to prevent label overlap
@@ -205,3 +206,31 @@ plt.close()
 print("Histograms of loaded Shapley values saved in the 'results' folder.")
 
 
+# Create a figure with two subplots for KDE plots
+fig, axes = plt.subplots(1, 2, figsize=(13, 5), sharey=False)
+
+# Define a color palette for distinct colors
+palette = sns.color_palette("tab20", d)
+
+# KDE plot for variables 1 to d/2
+for i, color in zip(range(1, d // 2 + 1), palette[:d // 2]):
+    sns.kdeplot(df_case1_loaded[f"V{i}"], label=f"Variable {i}", fill=True, alpha=0.1, ax=axes[0], color=color)
+
+axes[0].set_title("Shapley Value KDE for Variables 1 to 10")
+axes[0].set_xlabel("Shapley Value")
+# KDE plot for variables d/2+1 to d
+for i, color in zip(range(d // 2 + 1, d + 1), palette[d // 2:]):
+    sns.kdeplot(df_case1_loaded[f"V{i}"], label=f"Variable {i}", fill=True, alpha=0.1, ax=axes[1], color=color)
+
+axes[1].set_title("Shapley Value KDE for Variables 11 to 20")
+axes[1].set_xlabel("Shapley Value")
+
+# Remove y-tick labels for both subplots
+axes[0].tick_params(axis='y', labelleft=False)
+axes[1].tick_params(axis='y', labelleft=False)
+
+# Save the figure as a high-quality PDF
+fig.savefig("results/mmd/shapley_value_kde_plots.pdf", dpi=300, format='pdf', bbox_inches='tight')
+
+plt.tight_layout()
+plt.show()

@@ -31,15 +31,13 @@ plt.rcParams.update({
     'axes.labelweight': 'bold',  # Ensure the axis labels are bold
     'axes.titleweight': 'bold',  # Ensure the titles are bold
     'figure.titleweight': 'bold',  # Bold for suptitle if you use fig.suptitle()
-    'xtick.labelsize': 8,  # Font size for X-tick labels
-    'ytick.labelsize': 10,  # Font size for Y-tick labels
+    'xtick.labelsize': 12,  # Font size for X-tick labels
+    'ytick.labelsize': 12,  # Font size for Y-tick labels
     'xtick.major.size': 5,  # Length of major ticks
     'ytick.major.size': 5,  # Length of major ticks
     'xtick.minor.size': 3,  # Length of minor ticks
     'ytick.minor.size': 3   # Length of minor ticks
 })
-
-
 
 results_xsl = Path(f'results/localexp_syn_{time.strftime("%Y%m%d_%H%M%S")}.xlsx')
 
@@ -80,8 +78,6 @@ def compute_feature_wise_rbf_kernel(X_test, X_train, length_scales, constant_val
     return np.array(feature_kernels)
 
 
-
-
 # Define the number of samples and features as variables
 mode='deploy'
 n_samples = 1000
@@ -100,7 +96,7 @@ datasets = [
     #("SinLog", generate_dataset_sinlog(n_samples, n_features)),
     ("Polynomial Degree 5", generate_dataset_polynomial(n_samples, n_features, degree=5)),
     ("Polynomial Degree 10", generate_dataset_polynomial(n_samples, n_features, degree=10)),    
-     ("Squared Exponentials", generate_dataset_squared_exponentials(n_samples, n_features)),
+    ("Squared Exponentials", generate_dataset_squared_exponentials(n_samples, n_features)),
 ]
 # Prepare a dictionary to store accuracies for each dataset
 dataset_accuracies = {ds_name: {} for ds_name, _ in datasets}
@@ -110,11 +106,12 @@ dataset_execution_times = {ds_name: {} for ds_name, _ in datasets}
 
 plot_only = True
 if plot_only:
+    fig_size = (13, 3.5)
     # Load the Excel file
     results_df = pd.ExcelFile("results/syn/localexp_syn.xlsx")
 
     # Iterate through each dataset and plot results
-    fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=fig_size, sharey=True, sharex=True)
     for i, ds_name in enumerate(dataset_accuracies):
         # Load accuracies for the dataset
         accuracy_df = pd.read_excel(results_df, sheet_name=f"{ds_name}_Accuracies")
@@ -123,19 +120,21 @@ if plot_only:
         accuracy_data = [accuracy_df[method].dropna() for method in accuracy_df.columns]
         method_names = accuracy_df.columns
 
-        # Create boxplot in the corresponding subplot
-        axes[i].boxplot(accuracy_data, labels=method_names, vert=True, patch_artist=True)
+        # Create horizontal boxplot in the corresponding subplot
+        axes[i].boxplot(accuracy_data, labels=method_names, vert=False, patch_artist=True)
         axes[i].set_title(f"{ds_name}")
-        axes[i].set_ylabel("Accuracy")
-        #axes[i].set_xlabel("Methods")
-        axes[i].tick_params(axis='x', rotation=45)
+        #axes[i].set_xlabel("Accuracy")
+        axes[i].tick_params(axis='y', rotation=0)
+
+    # Set a common x-axis label
+    fig.text(0.5, 0.00, 'Accuracy', ha='center', va='center', fontsize=12, fontweight='bold')
 
     plt.tight_layout()
     plt.show()
-    fig.savefig(f"results/syn/localexp_syn_boxplot.png", dpi=500, format='png', bbox_inches='tight')
+    fig.savefig(f"results/syn/localexp_syn_boxplot.pdf", dpi=500, format='pdf', bbox_inches='tight')
 
     # Iterate through each dataset and plot execution times
-    fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=False)
+    fig, axes = plt.subplots(1, 3, figsize=fig_size, sharey=True)
     for i, ds_name in enumerate(dataset_execution_times):
         # Load execution times for the dataset
         execution_time_df = pd.read_excel(results_df, sheet_name=f"{ds_name}_ExecutionT")
@@ -146,14 +145,16 @@ if plot_only:
         std_devs = execution_time_df.iloc[:, 3].dropna()  # Fourth column: standard deviation
 
         # Create error bar plot in the corresponding subplot
-        axes[i].errorbar(method_names, averages, yerr=std_devs, fmt='o', capsize=5, ecolor='red', label='Execution Time')
+        axes[i].errorbar(averages, method_names, xerr=std_devs, fmt='o', capsize=5, ecolor='red', label='Execution Time',linewidth=3)
         axes[i].set_title(f"{ds_name}")
-        axes[i].set_ylabel("Execution Time (s)")
-        axes[i].tick_params(axis='x', rotation=45)
+        #axes[i].set_xlabel("Execution Time (s)")
+        axes[i].tick_params(axis='y', rotation=0)
+    
+    fig.text(0.5, 0.00, 'Execution Time (seconds)', ha='center', va='center', fontsize=12, fontweight='bold')
 
     plt.tight_layout()
     plt.show()
-    fig.savefig(f"results/syn/localexp_syn_execution_time.png", dpi=500, format='png', bbox_inches='tight')
+    fig.savefig(f"results/syn/localexp_syn_execution_time.pdf", dpi=500, format='pdf', bbox_inches='tight')
     
 
 
