@@ -1,4 +1,4 @@
-_venv/*
+_venv/
 otherexplainers/
 results/
 trained_models/
