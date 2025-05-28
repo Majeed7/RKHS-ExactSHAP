@@ -94,8 +94,6 @@ This notebook demonstrates how to use PKeX-Shapley to explain the dependence bet
 ```bibtex
 @article{pkex_shapley,
     title={Computing Exact Shapley Values in Polynomial Time for Product-Kernel Methods},
-    author={Mohammadi, Majid and Chau, Siu Lun and Muandet, Krikamol},
-    journal={arXiv preprint arXiv:2505.16516},
     year={2025}
 }
 ```
