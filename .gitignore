@@ -3,6 +3,7 @@ __pycache__/
 .vscode/
 backup/
 data/
+bashfiles/
 *.pyc
 trained_models/
 .DS_Store
