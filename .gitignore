@@ -1,5 +1,8 @@
-.venv
-__pycache__
+.venv/
+__pycache__/
+.vscode/
+data/
 *.pyc
+trained_models/
 .DS_Store
-.ipynb_checkpoints
+.ipynb_checkpoints/
