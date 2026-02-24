@@ -1,6 +1,6 @@
-# PKeX-Shapley: Computing Exact Shapley Value in Polynomial Time for Product-Kernel Methods
+# PKeX-Shapley: Linear-time Exact Shapley Values for Product-Kernel Methods
 
-This repository accompanies the paper **"Computing Exact Shapley Value in Polynomial Time for Product-Kernel Methods"** and provides code for the PKeX-Shapley method. The demos illustrate how to use PKeX-Shapley for explaining product kernel learning methods, Maximum Mean Discrepancy (MMD), and Hilbert-Schmidt Independence Criterion (HSIC).
+This repository accompanies the paper **"Linear-time Exact Shapley Values for Product-Kernel Methods"** and provides code for the PKeX-Shapley method. The demos illustrate how to use PKeX-Shapley for explaining product kernel learning methods, Maximum Mean Discrepancy (MMD), and Hilbert-Schmidt Independence Criterion (HSIC).
 
 ## Table of Contents
 
@@ -93,7 +93,7 @@ This notebook demonstrates how to use PKeX-Shapley to explain the dependence bet
 
 ```bibtex
 @article{pkex_shapley,
-    title={Computing Exact Shapley Values in Polynomial Time for Product-Kernel Methods},
+    title={Linear-time Exact Shapley Values for Product-Kernel Methods},
     year={2025}
 }
 ```
